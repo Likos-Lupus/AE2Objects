@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "a": "ae2:quartz_glass",
+    "b": "#c:dusts/redstone",
+    "d": "#c:ingots/netherite",
+    "e": "#c:gems/amethyst"
+  },
+  "pattern": [
+    "aba",
+    "b b",
+    "ded"
+  ],
+  "result": {
+    "id": "ae2objects:disk_housing"
+  }
+}

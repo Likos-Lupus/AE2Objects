@@ -1,0 +1,221 @@
+package top.likoslupus.ae2objects.item;
+
+import appeng.api.config.FuzzyMode;
+import appeng.api.stacks.AEKeyType;
+import appeng.api.storage.cells.CellState;
+import appeng.api.upgrades.IUpgradeInventory;
+import appeng.api.upgrades.UpgradeInventories;
+import appeng.hooks.AEToolItem;
+import appeng.items.contents.CellConfig;
+import appeng.util.ConfigInventory;
+import appeng.util.InteractionUtil;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.Level;
+import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
+import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
+import top.likoslupus.ae2objects.storage.DiskCellInventory;
+import top.likoslupus.ae2objects.storage.DiskCellItem;
+import top.likoslupus.ae2objects.storage.DiskStorageAccess;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+import org.jspecify.annotations.Nullable;
+
+import static appeng.api.storage.StorageCells.getCellInventory;
+
+public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
+
+    private final int bytes;
+    private final double idleDrain;
+    private final ItemLike coreItem;
+
+    public DiskDriveItem(
+            ResourceKey<Item> id,
+            ItemLike coreItem,
+            int kilobytes,
+            double idleDrain
+    ) {
+        super(
+                new Properties().setId(id).stacksTo(1).fireResistant()
+                        .component(Ae2ObjectsDataComponents.DISK_ITEM_COUNT.get(), 0L)
+                        .component(Ae2ObjectsDataComponents.FUZZY_MODE.get(), FuzzyMode.IGNORE_ALL)
+        );
+        this.bytes = kilobytes * 1000;
+        this.coreItem = coreItem;
+        this.idleDrain = idleDrain;
+    }
+
+    public static int getColor(ItemStack stack, int tintIndex) {
+        if (tintIndex == 1) {
+            var cellInv = DiskCellInventory.createInventory(
+                    stack,
+                    null,
+                    null
+            );
+            var cellStatus = cellInv != null
+                    ? cellInv.getClientStatus()
+                    : CellState.EMPTY;
+            return 0xFF000000 | cellStatus.getStateColor();
+        } else {
+            return 0xFFFFFFFF;
+        }
+    }
+
+    @Override
+    public boolean isEditable(ItemStack is) {
+        return true;
+    }
+
+    @Override
+    public FuzzyMode getFuzzyMode(final ItemStack is) {
+        return is.getOrDefault(Ae2ObjectsDataComponents.FUZZY_MODE.get(), FuzzyMode.IGNORE_ALL);
+    }
+
+    @Override
+    public void setFuzzyMode(final ItemStack is, final FuzzyMode fzMode) {
+        is.set(Ae2ObjectsDataComponents.FUZZY_MODE.get(), fzMode);
+    }
+
+    @Override
+    public AEKeyType getKeyType() {
+        return AEKeyType.items();
+    }
+
+    @Override
+    public InteractionResult use(
+            final Level level,
+            final Player player,
+            final InteractionHand hand
+    ) {
+        if (level instanceof ServerLevel serverLevel) {
+            this.disassembleDrive(player.getItemInHand(hand), serverLevel, player);
+        }
+
+        return InteractionResult.SUCCESS;
+    }
+
+    private boolean disassembleDrive(
+            final ItemStack stack,
+            final ServerLevel level,
+            final @Nullable Player player
+    ) {
+        if (player != null && InteractionUtil.isInAlternateUseMode(player)) {
+            final var playerInventory = player.getInventory();
+            var inv = getCellInventory(stack, null);
+            if (inv != null && playerInventory.getSelectedItem() == stack) {
+                var list = inv.getAvailableStacks();
+                if (list.isEmpty()) {
+                    playerInventory.setItem(playerInventory.getSelectedSlot(), ItemStack.EMPTY);
+
+                    // drop core
+                    playerInventory.placeItemBackInInventory(new ItemStack(coreItem));
+
+                    // drop upgrades
+                    var upgrades = this.getUpgrades(stack);
+                    if (upgrades != null) {
+                        upgrades.forEach(playerInventory::placeItemBackInInventory);
+                    }
+
+                    // drop empty storage cell housing
+                    playerInventory.placeItemBackInInventory(new ItemStack(Ae2ObjectsItems.DISK_HOUSING.get()));
+
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Nullable
+    @Override
+    public IUpgradeInventory getUpgrades(ItemStack is) {
+        return UpgradeInventories.forItem(is, 2);
+    }
+
+    @Override
+    public void appendHoverText(
+            ItemStack stack,
+            TooltipContext context,
+            TooltipDisplay display,
+            Consumer<Component> tooltip,
+            TooltipFlag tooltipFlag
+    ) {
+        tooltip.accept(
+                Component.literal("Deep Item Storage disK - Storage for dummies")
+                        .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC)
+        );
+        List<Component> lines = new ArrayList<>();
+        addCellInformationToTooltip(stack, lines);
+        lines.forEach(tooltip);
+    }
+
+    @Override
+    public int getBytes(ItemStack cellItem) {
+        return bytes;
+    }
+
+    @Override
+    public InteractionResult onItemUseFirst(
+            ItemStack stack,
+            UseOnContext context
+    ) {
+        if (context.getLevel() instanceof ServerLevel serverLevel) {
+            return this.disassembleDrive(stack, serverLevel, context.getPlayer())
+                    ? InteractionResult.SUCCESS
+                    : InteractionResult.PASS;
+        }
+        return InteractionResult.PASS;
+    }
+
+    @Override
+    public double getIdleDrain() {
+        return idleDrain;
+    }
+
+    @Override
+    public ConfigInventory getConfigInventory(ItemStack is) {
+        return CellConfig.create(Set.of(getKeyType()), is);
+    }
+
+    @Override
+    public ItemStack clone(ItemStack item) {
+        var diskId = item.get(Ae2ObjectsDataComponents.DISK_ID.get());
+        if (diskId != null) {
+            var id = UUID.randomUUID();
+            var newStack = item.copy();
+            newStack.set(Ae2ObjectsDataComponents.DISK_ID.get(), id);
+            newStack.setCount(newStack.getMaxStackSize());
+
+            // Deep clone the disk if storage manager is available
+            var storageManager = DiskStorageAccess.getOrNull();
+            if (storageManager != null) {
+                var originalStorage = storageManager.getOrCreateDisk(diskId);
+                var clonedStorage = originalStorage.copy();
+                newStack.set(Ae2ObjectsDataComponents.DISK_ITEM_COUNT.get(), clonedStorage.getItemCount());
+                storageManager.updateDisk(id, clonedStorage);
+            } else {
+                newStack.remove(Ae2ObjectsDataComponents.DISK_ITEM_COUNT.get());
+            }
+
+            return newStack;
+        } else {
+            return item.copy();
+        }
+    }
+
+}

@@ -1,66 +1,40 @@
-# This is an example mods.toml file. It contains the data relating to the loading mods.
-# There are several mandatory fields (#mandatory), and many more that are optional (#optional).
-# The overall format is standard TOML format, v0.5.0.
-# Note that there are a couple of TOML lists in this file.
-# Find more information on toml format here:  https://github.com/toml-lang/toml
-# The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
-modLoader="javafml" #mandatory
-# A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion="[2,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
-# The license for you mod. This is mandatory metadata and allows for easier comprehension of your redistributive properties.
-# Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
-license="MIT"
-# A URL to refer people to when problems occur with this mod
-#issueTrackerURL="https://change.me.to.your.issue.tracker.example.invalid/" #optional
-# A list of mods - how many allowed here is determined by the individual mod loader
-[[mods]] #mandatory
-# The modid of the mod
-modId="ae2things" #mandatory
-version="${file.jarVersion}" #mandatory
- # A display name for the mod
-displayName="AE2 Things" #mandatory
-# A URL to query for updates for this mod. See the JSON update specification https://mcforge.readthedocs.io/en/latest/gettingstarted/autoupdate/
-#updateJSONURL="https://change.me.example.invalid/updates.json" #optional
-# A URL for the "homepage" for this mod, displayed in the mod UI
-displayURL="https://www.curseforge.com/minecraft/mc-mods/ae2-things-forge"
-# A file name (in the root of the mod JAR) containing a logo for display
-logoFile="icon.png"
-# A text field displayed in the mod UI
-credits="Thanks to ProjectET for the initial Fabric version." #optional
-# A text field displayed in the mod UI
-authors="ProjectET, Technici4n" #optional
-# The description text for the mod (multi line!) (#mandatory)
-description='''
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "ae2objects"
+version = "${version}"
+displayName = "AE2Objects"
+logoFile = "icon.png"
+credits = "Based on AE2Things by ProjectET and Technici4n."
+authors = "Likos-Lupus, ProjectET, Technici4n"
+description = '''
 This mod adds a new type of cell the DISK: Deep Item Storage disK.
 This cell has no type limits and one item counts as one byte.
 Due to limitations with the cell format, you lose 24 bytes per kibibyte, but hey a small price to pay for no types right?
 '''
 
 [[mixins]]
-config="mixins.ae2things.json"
+config = "ae2objects.mixins.json"
 
-# A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
-[[dependencies.ae2things]] #optional
-    # the modid of the dependency
-    modId="neoforge" #mandatory
-    # Does this dependency have to exist - if not, ordering below must be specified
-    type="required"
-    # The version range of the dependency
-    versionRange="[21.1.0,)" #mandatory
-    # An ordering relationship for the dependency - BEFORE or AFTER required if the relationship is not mandatory
-    ordering="NONE"
-    # Side this dependency is applied on - BOTH, CLIENT or SERVER
-    side="BOTH"
-# Here's another dependency
-[[dependencies.ae2things]]
-    modId="minecraft"
-    type="required"
-    versionRange="[1.21.1,)"
-    ordering="NONE"
-    side="BOTH"
-[[dependencies.ae2things]]
-    modId="ae2"
-    type="required"
-    versionRange = "[19.0.0-beta, 20.0.0)"
-    ordering="AFTER"
-    side="BOTH"
+[[dependencies.ae2objects]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.1.2.71,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.ae2objects]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.1.2, 26.2.0)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.ae2objects]]
+modId = "ae2"
+type = "required"
+versionRange = "[26.1.10-beta, 26.2.0)"
+ordering = "AFTER"
+side = "BOTH"

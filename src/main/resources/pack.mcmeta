@@ -1,6 +1,13 @@
 {
-    "pack": {
-        "description": "AE2Things resources",
-        "pack_format": 9
-    }
+  "pack": {
+    "description": "AE2Objects resources",
+    "min_format": [
+      84,
+      0
+    ],
+    "max_format": [
+      101,
+      1
+    ]
+  }
 }

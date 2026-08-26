@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "ae2objects:disk_housing",
+    "ae2:cell_component_64k"
+  ],
+  "result": {
+    "id": "ae2objects:disk_drive_64k"
+  }
+}
