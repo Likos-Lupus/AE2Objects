@@ -83,11 +83,11 @@ public final class Ae2ObjectsItems {
             DISK_DRIVE_256K
     );
 
-    public static final Identifier MODEL_DISK_DRIVE_1K = id("model/drive/cells/disk_1k");
-    public static final Identifier MODEL_DISK_DRIVE_4K = id("model/drive/cells/disk_4k");
-    public static final Identifier MODEL_DISK_DRIVE_16K = id("model/drive/cells/disk_16k");
-    public static final Identifier MODEL_DISK_DRIVE_64K = id("model/drive/cells/disk_64k");
-    public static final Identifier MODEL_DISK_DRIVE_256K = id("model/drive/cells/disk_256k");
+    public static final Identifier MODEL_DISK_DRIVE_1K = id("block/drive/cells/disk_1k");
+    public static final Identifier MODEL_DISK_DRIVE_4K = id("block/drive/cells/disk_4k");
+    public static final Identifier MODEL_DISK_DRIVE_16K = id("block/drive/cells/disk_16k");
+    public static final Identifier MODEL_DISK_DRIVE_64K = id("block/drive/cells/disk_64k");
+    public static final Identifier MODEL_DISK_DRIVE_256K = id("block/drive/cells/disk_256k");
 
     private Ae2ObjectsItems() {
     }

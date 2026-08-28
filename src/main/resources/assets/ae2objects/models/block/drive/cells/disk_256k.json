@@ -1,5 +1,5 @@
 {
-  "parent": "ae2:block/drive/cells/1k_item_cell",
+  "parent": "ae2:block/drive_256k_item_cell",
   "textures": {
     "particle": "ae2objects:block/drive/drive_cells",
     "cell": "ae2objects:block/drive/drive_cells"
