@@ -3,7 +3,6 @@
 [![Stars](https://img.shields.io/github/stars/Likos-Lupus/AE2Objects?style=flat-square&label=Stars&labelColor=444444&color=eac54f)](https://github.com/Likos-Lupus/AE2Objects/)
 [![Release](https://img.shields.io/github/v/release/Likos-Lupus/AE2Objects?style=flat-square&labelColor=444444&label=Release&include_prereleases)](https://github.com/Likos-Lupus/AE2Objects/releases)
 [![GitHub CI](https://img.shields.io/github/actions/workflow/status/Likos-Lupus/AE2Objects/build.yml?style=flat-square&labelColor=444444&branch=master&label=GitHub%20CI)](https://github.com/Likos-Lupus/AE2Objects/actions/workflows/build.yml)
-[![License](https://img.shields.io/github/license/Likos-Lupus/AE2Objects?style=flat-square&labelColor=444444&color=blue)](https://github.com/Likos-Lupus/AE2Objects/blob/master/LICENSE)
 [![Modrinth](https://img.shields.io/badge/Modrinth-AE2%20Objcts-22ff84?style=flat-square&labelColor=444444)](https://modrinth.com/mod/ae2-objects/)
 [![CurseForge](https://img.shields.io/badge/CurseForge-AE2%20Objcts-f16436?style=flat-square&labelColor=444444)](https://www.curseforge.com/minecraft/mc-mods/ae2-objects)
 
