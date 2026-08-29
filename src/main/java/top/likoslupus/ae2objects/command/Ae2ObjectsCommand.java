@@ -50,13 +50,13 @@ public class Ae2ObjectsCommand {
         );
         context.getSource().sendSuccess(
                 () -> Component.literal(
-                        "/ae2objects recover <UUID> - Spawns a drive with the given UUID, if it doesn't exist, does not spawn any item."
+                        "/ae2objects recover <UUID> - Spawns a storage cell with the given UUID, if it doesn't exist, does not spawn any item."
                 ),
                 false
         );
         context.getSource().sendSuccess(
                 () -> Component.literal(
-                        "/ae2objects getuuid - Gets the UUID of the drive in the player's hand if it has a UUID. Returns the DISK's uuid."
+                        "/ae2objects getuuid - Gets the UUID of the storage cell in the player's hand if it has a UUID."
                 ),
                 false
         );
@@ -71,13 +71,13 @@ public class Ae2ObjectsCommand {
         var storageManager = DiskStorageAccess.getOrNull();
 
         if (storageManager != null && storageManager.hasUUID(uuid)) {
-            var stack = new ItemStack(Ae2ObjectsItems.DISK_DRIVE_256K.get());
+            var stack = new ItemStack(Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_256K.get());
             stack.set(
-                    Ae2ObjectsDataComponents.DISK_ID.get(),
+                    Ae2ObjectsDataComponents.CELL_ID.get(),
                     uuid
             );
             stack.set(
-                    Ae2ObjectsDataComponents.DISK_ITEM_COUNT.get(),
+                    Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(),
                     storageManager.getOrCreateDisk(uuid).getItemCount()
             );
 
@@ -104,9 +104,9 @@ public class Ae2ObjectsCommand {
         var player = (Player) context.getSource().getPlayerOrException();
         var mainStack = player.getMainHandItem();
         if (mainStack.getItem() instanceof DiskCellItem) {
-            var diskId = mainStack.get(Ae2ObjectsDataComponents.DISK_ID.get());
-            if (diskId != null) {
-                var text = copyToClipboard(diskId.toString());
+            var cellId = mainStack.get(Ae2ObjectsDataComponents.CELL_ID.get());
+            if (cellId != null) {
+                var text = copyToClipboard(cellId.toString());
                 context.getSource().sendSuccess(
                         () -> Component.translatable("command.ae2objects.getuuid_success", text),
                         false
@@ -119,7 +119,7 @@ public class Ae2ObjectsCommand {
             }
         }
         context.getSource()
-                .sendFailure(Component.translatable("command.ae2objects.getuuid_fail_notdisk"));
+                .sendFailure(Component.translatable("command.ae2objects.getuuid_fail_notcell"));
         return 1;
     }
 

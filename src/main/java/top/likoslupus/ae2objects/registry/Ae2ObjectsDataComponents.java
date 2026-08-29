@@ -18,15 +18,15 @@ public final class Ae2ObjectsDataComponents {
     public static final DeferredRegister.DataComponents COMPONENTS = DeferredRegister
             .createDataComponents(Registries.DATA_COMPONENT_TYPE, Ae2Objects.MOD_ID);
 
-    public static final Supplier<DataComponentType<UUID>> DISK_ID = COMPONENTS.registerComponentType(
-            "disk_id",
+    public static final Supplier<DataComponentType<UUID>> CELL_ID = COMPONENTS.registerComponentType(
+            "cell_id",
             builder -> builder
                     .persistent(UUIDUtil.CODEC)
                     .networkSynchronized(UUIDUtil.STREAM_CODEC)
     );
 
-    public static final Supplier<DataComponentType<Long>> DISK_ITEM_COUNT = COMPONENTS.registerComponentType(
-            "disk_item_count",
+    public static final Supplier<DataComponentType<Long>> CELL_ITEM_COUNT = COMPONENTS.registerComponentType(
+            "cell_item_count",
             builder -> builder
                     .persistent(Codec.LONG)
                     .networkSynchronized(ByteBufCodecs.VAR_LONG)

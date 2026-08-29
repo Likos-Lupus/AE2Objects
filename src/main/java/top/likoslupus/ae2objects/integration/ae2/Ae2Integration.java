@@ -18,35 +18,35 @@ public final class Ae2Integration {
         StorageCells.addCellHandler(DiskCellHandler.INSTANCE);
 
         event.enqueueWork(() -> {
-            var disksText = "text.ae2objects.disk_drives";
+            var cellsText = "text.ae2objects.deep_item_storage_cells";
 
-            Ae2ObjectsItems.DISK_DRIVES.forEach(cell -> {
-                Upgrades.add(AEItems.FUZZY_CARD, cell.get(), 1, disksText);
-                Upgrades.add(AEItems.INVERTER_CARD, cell.get(), 1, disksText);
+            Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELLS.forEach(cell -> {
+                Upgrades.add(AEItems.FUZZY_CARD, cell.get(), 1, cellsText);
+                Upgrades.add(AEItems.INVERTER_CARD, cell.get(), 1, cellsText);
             });
         });
     }
 
     public static void initClient() {
         registerModel(
-                Ae2ObjectsItems.DISK_DRIVE_1K.get(),
-                Ae2ObjectsItems.MODEL_DISK_DRIVE_1K
+                Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_1K.get(),
+                Ae2ObjectsItems.MODEL_DEEP_STORAGE_CELL_1K
         );
         registerModel(
-                Ae2ObjectsItems.DISK_DRIVE_4K.get(),
-                Ae2ObjectsItems.MODEL_DISK_DRIVE_4K
+                Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_4K.get(),
+                Ae2ObjectsItems.MODEL_DEEP_STORAGE_CELL_4K
         );
         registerModel(
-                Ae2ObjectsItems.DISK_DRIVE_16K.get(),
-                Ae2ObjectsItems.MODEL_DISK_DRIVE_16K
+                Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_16K.get(),
+                Ae2ObjectsItems.MODEL_DEEP_STORAGE_CELL_16K
         );
         registerModel(
-                Ae2ObjectsItems.DISK_DRIVE_64K.get(),
-                Ae2ObjectsItems.MODEL_DISK_DRIVE_64K
+                Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_64K.get(),
+                Ae2ObjectsItems.MODEL_DEEP_STORAGE_CELL_64K
         );
         registerModel(
-                Ae2ObjectsItems.DISK_DRIVE_256K.get(),
-                Ae2ObjectsItems.MODEL_DISK_DRIVE_256K
+                Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_256K.get(),
+                Ae2ObjectsItems.MODEL_DEEP_STORAGE_CELL_256K
         );
     }
 

@@ -23,7 +23,7 @@ public class DiskCellHandler implements ICellHandler {
     }
 
     @Override
-    public DiskCellInventory getCellInventory(ItemStack is, @Nullable ISaveProvider container) {
+    public @Nullable DiskCellInventory getCellInventory(ItemStack is, @Nullable ISaveProvider container) {
         return DiskCellInventory.createInventory(is, container, DiskStorageAccess.getOrNull());
     }
 

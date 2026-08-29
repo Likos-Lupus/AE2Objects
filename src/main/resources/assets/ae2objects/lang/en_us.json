@@ -1,14 +1,14 @@
 {
-  "item.ae2objects.disk_drive_1k": "1k ME DISK Drive",
-  "item.ae2objects.disk_drive_4k": "4k ME DISK Drive",
-  "item.ae2objects.disk_drive_16k": "16k ME DISK Drive",
-  "item.ae2objects.disk_drive_64k": "64k ME DISK Drive",
-  "item.ae2objects.disk_drive_256k": "256k ME DISK Drive",
-  "item.ae2objects.disk_housing": "ME DISK Housing",
-  "text.ae2objects.disk_drives": "ME DISK Drives",
-  "command.ae2objects.recover_success": "%s has recovered a DISK Drive with the UUID of [%s].",
-  "command.ae2objects.recover_fail": "Failed to recover DISK Drive: UUID [%s] does not exist.",
-  "command.ae2objects.getuuid_success": "UUID of given DISK is: [%s]",
-  "command.ae2objects.getuuid_fail_nouuid": "Error, given DISK is empty/no uuid found.",
-  "command.ae2objects.getuuid_fail_notdisk": "Error, given item is not a DISK."
+  "item.ae2objects.deep_item_cell_housing": "ME Deep Item Storage Housing",
+  "item.ae2objects.deep_item_storage_cell_1k": "1k ME Deep Item Storage Cell",
+  "item.ae2objects.deep_item_storage_cell_4k": "4k ME Deep Item Storage Cell",
+  "item.ae2objects.deep_item_storage_cell_16k": "16k ME Deep Item Storage Cell",
+  "item.ae2objects.deep_item_storage_cell_64k": "64k ME Deep Item Storage Cell",
+  "item.ae2objects.deep_item_storage_cell_256k": "256k ME Deep Item Storage Cell",
+  "text.ae2objects.deep_item_storage_cells": "ME Deep Item Storage Cells",
+  "command.ae2objects.recover_success": "%s has recovered a Deep Item Storage Cell with the UUID of [%s].",
+  "command.ae2objects.recover_fail": "Failed to recover Deep Item Storage Cell: UUID [%s] does not exist.",
+  "command.ae2objects.getuuid_success": "UUID of given Storage Cell is: [%s]",
+  "command.ae2objects.getuuid_fail_nouuid": "Error, given Storage Cell is empty/no UUID found.",
+  "command.ae2objects.getuuid_fail_notcell": "Error, given item is not a Deep Item Storage Cell."
 }

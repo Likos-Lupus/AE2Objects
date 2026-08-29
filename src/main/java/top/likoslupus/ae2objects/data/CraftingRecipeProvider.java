@@ -24,21 +24,21 @@ public class CraftingRecipeProvider extends RecipeProvider {
 
     @Override
     protected void buildRecipes() {
-        driveRecipes();
+        cellRecipes();
         housingRecipe();
     }
 
-    private void driveRecipes() {
-        var componentsToDrive = Map.of(
-                AEItems.CELL_COMPONENT_1K, Ae2ObjectsItems.DISK_DRIVE_1K,
-                AEItems.CELL_COMPONENT_4K, Ae2ObjectsItems.DISK_DRIVE_4K,
-                AEItems.CELL_COMPONENT_16K, Ae2ObjectsItems.DISK_DRIVE_16K,
-                AEItems.CELL_COMPONENT_64K, Ae2ObjectsItems.DISK_DRIVE_64K,
-                AEItems.CELL_COMPONENT_256K, Ae2ObjectsItems.DISK_DRIVE_256K
+    private void cellRecipes() {
+        var componentsToCell = Map.of(
+                AEItems.CELL_COMPONENT_1K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_1K,
+                AEItems.CELL_COMPONENT_4K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_4K,
+                AEItems.CELL_COMPONENT_16K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_16K,
+                AEItems.CELL_COMPONENT_64K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_64K,
+                AEItems.CELL_COMPONENT_256K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_256K
         );
 
-        componentsToDrive.forEach((component, drive) -> {
-            shaped(RecipeCategory.MISC, drive.get())
+        componentsToCell.forEach((component, cell) -> {
+            shaped(RecipeCategory.MISC, cell.get())
                     .pattern("aba")
                     .pattern("bcb")
                     .pattern("ded")
@@ -50,17 +50,17 @@ public class CraftingRecipeProvider extends RecipeProvider {
                     .unlockedBy("has_netherite", has(Tags.Items.INGOTS_NETHERITE))
                     .save(output);
 
-            shapeless(RecipeCategory.MISC, drive.get())
-                    .requires(Ae2ObjectsItems.DISK_HOUSING)
+            shapeless(RecipeCategory.MISC, cell.get())
+                    .requires(Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING)
                     .requires(component)
-                    .unlockedBy("has_housing", has(Ae2ObjectsItems.DISK_HOUSING))
+                    .unlockedBy("has_housing", has(Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING))
                     .unlockedBy("has_component", has(component))
-                    .save(output, drive.getId().withSuffix("_with_housing").toString());
+                    .save(output, cell.getId().withSuffix("_with_housing").toString());
         });
     }
 
     private void housingRecipe() {
-        shaped(RecipeCategory.MISC, Ae2ObjectsItems.DISK_HOUSING)
+        shaped(RecipeCategory.MISC, Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING)
                 .pattern("aba")
                 .pattern("b b")
                 .pattern("ded")
@@ -74,7 +74,10 @@ public class CraftingRecipeProvider extends RecipeProvider {
 
     public static final class Runner extends RecipeProvider.Runner {
 
-        public Runner(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider) {
+        public Runner(
+                PackOutput output,
+                CompletableFuture<HolderLookup.Provider> lookupProvider
+        ) {
             super(output, lookupProvider);
         }
 

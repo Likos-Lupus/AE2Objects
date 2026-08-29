@@ -42,8 +42,8 @@ public class Ae2Objects {
             return;
         }
 
-        event.accept(Ae2ObjectsItems.DISK_HOUSING);
-        Ae2ObjectsItems.DISK_DRIVES.stream()
+        event.accept(Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING);
+        Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELLS.stream()
                 .map(Supplier::get)
                 .forEach(event::accept);
     }

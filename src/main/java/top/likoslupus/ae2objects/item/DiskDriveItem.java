@@ -52,7 +52,7 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
     ) {
         super(
                 new Properties().setId(id).stacksTo(1).fireResistant()
-                        .component(Ae2ObjectsDataComponents.DISK_ITEM_COUNT.get(), 0L)
+                        .component(Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(), 0L)
                         .component(Ae2ObjectsDataComponents.FUZZY_MODE.get(), FuzzyMode.IGNORE_ALL)
         );
         this.bytes = kilobytes * 1000;
@@ -132,7 +132,9 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
                     }
 
                     // drop empty storage cell housing
-                    playerInventory.placeItemBackInInventory(new ItemStack(Ae2ObjectsItems.DISK_HOUSING.get()));
+                    playerInventory.placeItemBackInInventory(
+                            new ItemStack(Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING.get())
+                    );
 
                     return true;
                 }
@@ -156,7 +158,7 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
             TooltipFlag tooltipFlag
     ) {
         tooltip.accept(
-                Component.literal("Deep Item Storage disK - Storage for dummies")
+                Component.literal("Deep Item Storage Cell - Storage without type limits")
                         .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC)
         );
         List<Component> lines = new ArrayList<>();
@@ -194,22 +196,25 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
 
     @Override
     public ItemStack clone(ItemStack item) {
-        var diskId = item.get(Ae2ObjectsDataComponents.DISK_ID.get());
-        if (diskId != null) {
+        var cellId = item.get(Ae2ObjectsDataComponents.CELL_ID.get());
+        if (cellId != null) {
             var id = UUID.randomUUID();
             var newStack = item.copy();
-            newStack.set(Ae2ObjectsDataComponents.DISK_ID.get(), id);
+            newStack.set(Ae2ObjectsDataComponents.CELL_ID.get(), id);
             newStack.setCount(newStack.getMaxStackSize());
 
             // Deep clone the disk if storage manager is available
             var storageManager = DiskStorageAccess.getOrNull();
             if (storageManager != null) {
-                var originalStorage = storageManager.getOrCreateDisk(diskId);
+                var originalStorage = storageManager.getOrCreateDisk(cellId);
                 var clonedStorage = originalStorage.copy();
-                newStack.set(Ae2ObjectsDataComponents.DISK_ITEM_COUNT.get(), clonedStorage.getItemCount());
+                newStack.set(
+                        Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(),
+                        clonedStorage.getItemCount()
+                );
                 storageManager.updateDisk(id, clonedStorage);
             } else {
-                newStack.remove(Ae2ObjectsDataComponents.DISK_ITEM_COUNT.get());
+                newStack.remove(Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get());
             }
 
             return newStack;

@@ -5,11 +5,11 @@ Energistics 2.
 
 ## Features
 
-- **DISK (Deep Item Storage disK)**: A high-density storage cell with **no item type limits**—every
-  item consumes exactly 1 byte.
+- **Deep Item Storage Cell**: High-density storage cells with **no item type limits**—every item
+  consumes exactly 1 byte.
 - Available in multiple capacity tiers: **1K**, **4K**, **16K**, **64K**, and **256K**.
 - Full support for AE2 cell workbench partitioning, fuzzy cards, and inverter cards.
-- Clean disassembly: Crouch + right-click an empty DISK in hand or on a block to recover the storage
+- Clean disassembly: Crouch + right-click an empty cell in hand or on a block to recover the storage
   housing and storage component.
 - In-game recovery & inspection commands (`/ae2objects getuuid`, `/ae2objects recover <uuid>`).
 

@@ -1,13 +1,14 @@
 {
-  "item.ae2objects.disk_drive_1k": "Дисковый накопитель ME 1К",
-  "item.ae2objects.disk_drive_4k": "Дисковый накопитель ME 4К",
-  "item.ae2objects.disk_drive_16k": "Дисковый накопитель ME 16К",
-  "item.ae2objects.disk_drive_64k": "Дисковый накопитель ME 64К",
-  "item.ae2objects.disk_drive_256k": "Дисковый накопитель ME 256К",
-  "item.ae2objects.disk_housing": "Корпус диска ME",
-  "command.ae2objects.recover_success": "%s восстановил Дисковый накопитель с UUID [%s].",
-  "command.ae2objects.recover_fail": "Не удалось восстановить Дисковый накопитель: (универсальный уникальный идентификатор) UUID [%s] не существует.",
-  "command.ae2objects.getuuid_success": "Диск получил UUID: [%s]",
-  "command.ae2objects.getuuid_fail_nouuid": "Ошибка, полученный Диск пуст/не найден uuid.",
-  "command.ae2objects.getuuid_fail_notdisk": "Ошибка, полученный предмет не Диск."
+  "item.ae2objects.deep_item_cell_housing": "Корпус глубокой ячейки хранения предметов ME",
+  "item.ae2objects.deep_item_storage_cell_1k": "1К ME глубокая ячейка хранения предметов",
+  "item.ae2objects.deep_item_storage_cell_4k": "4К ME глубокая ячейка хранения предметов",
+  "item.ae2objects.deep_item_storage_cell_16k": "16К ME глубокая ячейка хранения предметов",
+  "item.ae2objects.deep_item_storage_cell_64k": "64К ME глубокая ячейка хранения предметов",
+  "item.ae2objects.deep_item_storage_cell_256k": "256К ME глубокая ячейка хранения предметов",
+  "text.ae2objects.deep_item_storage_cells": "Глубокие ячейки хранения предметов ME",
+  "command.ae2objects.recover_success": "%s восстановил глубокую ячейку хранения предметов с UUID [%s].",
+  "command.ae2objects.recover_fail": "Не удалось восстановить глубокую ячейку хранения предметов: UUID [%s] не существует.",
+  "command.ae2objects.getuuid_success": "Ячейка хранения получила UUID: [%s]",
+  "command.ae2objects.getuuid_fail_nouuid": "Ошибка, полученная ячейка хранения пуста/не найден UUID.",
+  "command.ae2objects.getuuid_fail_notcell": "Ошибка, полученный предмет не является глубокой ячейкой хранения предметов."
 }

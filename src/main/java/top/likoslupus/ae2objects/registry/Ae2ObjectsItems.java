@@ -20,8 +20,8 @@ public final class Ae2ObjectsItems {
 
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Ae2Objects.MOD_ID);
 
-    public static final DeferredItem<Item> DISK_HOUSING = ITEMS.register(
-            "disk_housing",
+    public static final DeferredItem<Item> DEEP_ITEM_CELL_HOUSING = ITEMS.register(
+            "deep_item_cell_housing",
             key -> new Item(
                     new Item.Properties()
                             .setId(ResourceKey.create(Registries.ITEM, key))
@@ -29,8 +29,8 @@ public final class Ae2ObjectsItems {
                             .fireResistant()
             )
     );
-    public static final DeferredItem<Item> DISK_DRIVE_1K = ITEMS.register(
-            "disk_drive_1k",
+    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_1K = ITEMS.register(
+            "deep_item_storage_cell_1k",
             key -> new DiskDriveItem(
                     ResourceKey.create(Registries.ITEM, key),
                     AEItems.CELL_COMPONENT_1K.asItem(),
@@ -38,8 +38,8 @@ public final class Ae2ObjectsItems {
                     0.5f
             )
     );
-    public static final DeferredItem<Item> DISK_DRIVE_4K = ITEMS.register(
-            "disk_drive_4k",
+    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_4K = ITEMS.register(
+            "deep_item_storage_cell_4k",
             key -> new DiskDriveItem(
                     ResourceKey.create(Registries.ITEM, key),
                     AEItems.CELL_COMPONENT_4K.asItem(),
@@ -47,8 +47,8 @@ public final class Ae2ObjectsItems {
                     1.0f
             )
     );
-    public static final DeferredItem<Item> DISK_DRIVE_16K = ITEMS.register(
-            "disk_drive_16k",
+    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_16K = ITEMS.register(
+            "deep_item_storage_cell_16k",
             key -> new DiskDriveItem(
                     ResourceKey.create(Registries.ITEM, key),
                     AEItems.CELL_COMPONENT_16K.asItem(),
@@ -56,8 +56,8 @@ public final class Ae2ObjectsItems {
                     1.5f
             )
     );
-    public static final DeferredItem<Item> DISK_DRIVE_64K = ITEMS.register(
-            "disk_drive_64k",
+    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_64K = ITEMS.register(
+            "deep_item_storage_cell_64k",
             key -> new DiskDriveItem(
                     ResourceKey.create(Registries.ITEM, key),
                     AEItems.CELL_COMPONENT_64K.asItem(),
@@ -65,8 +65,8 @@ public final class Ae2ObjectsItems {
                     2.0f
             )
     );
-    public static final DeferredItem<Item> DISK_DRIVE_256K = ITEMS.register(
-            "disk_drive_256k",
+    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_256K = ITEMS.register(
+            "deep_item_storage_cell_256k",
             key -> new DiskDriveItem(
                     ResourceKey.create(Registries.ITEM, key),
                     AEItems.CELL_COMPONENT_256K.asItem(),
@@ -75,19 +75,29 @@ public final class Ae2ObjectsItems {
             )
     );
 
-    public static final List<Supplier<Item>> DISK_DRIVES = List.of(
-            DISK_DRIVE_1K,
-            DISK_DRIVE_4K,
-            DISK_DRIVE_16K,
-            DISK_DRIVE_64K,
-            DISK_DRIVE_256K
+    public static final List<Supplier<Item>> DEEP_ITEM_STORAGE_CELLS = List.of(
+            DEEP_ITEM_STORAGE_CELL_1K,
+            DEEP_ITEM_STORAGE_CELL_4K,
+            DEEP_ITEM_STORAGE_CELL_16K,
+            DEEP_ITEM_STORAGE_CELL_64K,
+            DEEP_ITEM_STORAGE_CELL_256K
     );
 
-    public static final Identifier MODEL_DISK_DRIVE_1K = id("block/drive/cells/disk_1k");
-    public static final Identifier MODEL_DISK_DRIVE_4K = id("block/drive/cells/disk_4k");
-    public static final Identifier MODEL_DISK_DRIVE_16K = id("block/drive/cells/disk_16k");
-    public static final Identifier MODEL_DISK_DRIVE_64K = id("block/drive/cells/disk_64k");
-    public static final Identifier MODEL_DISK_DRIVE_256K = id("block/drive/cells/disk_256k");
+    public static final Identifier MODEL_DEEP_STORAGE_CELL_1K = id(
+            "block/drive/cells/deep_item_storage_cell_1k"
+    );
+    public static final Identifier MODEL_DEEP_STORAGE_CELL_4K = id(
+            "block/drive/cells/deep_item_storage_cell_4k"
+    );
+    public static final Identifier MODEL_DEEP_STORAGE_CELL_16K = id(
+            "block/drive/cells/deep_item_storage_cell_16k"
+    );
+    public static final Identifier MODEL_DEEP_STORAGE_CELL_64K = id(
+            "block/drive/cells/deep_item_storage_cell_64k"
+    );
+    public static final Identifier MODEL_DEEP_STORAGE_CELL_256K = id(
+            "block/drive/cells/deep_item_storage_cell_256k"
+    );
 
     private Ae2ObjectsItems() {
     }

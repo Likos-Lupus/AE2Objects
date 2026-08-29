@@ -1,13 +1,14 @@
 {
-  "item.ae2objects.disk_drive_1k": "МЕ дисковий накопичувач 1К",
-  "item.ae2objects.disk_drive_4k": "МЕ дисковий накопичувач 4К",
-  "item.ae2objects.disk_drive_16k": "МЕ дисковий накопичувач 16К",
-  "item.ae2objects.disk_drive_64k": "МЕ дисковий накопичувач 64К",
-  "item.ae2objects.disk_drive_256k": "МЕ дисковий накопичувач 256К",
-  "item.ae2objects.disk_housing": "Корпус ME комірки",
-  "command.ae2objects.recover_success": "%s відновив дисковий накопичувач з UUID [%s].",
-  "command.ae2objects.recover_fail": "Не вдалося відновити дисковий накопичувач: UUID [%s] не існує.",
-  "command.ae2objects.getuuid_success": "UUID диска: [%s]",
-  "command.ae2objects.getuuid_fail_nouuid": "Помилка, оскільки диск порожній/не знайдено uuid.",
-  "command.ae2objects.getuuid_fail_notdisk": "Помилка, предмет не є ДИСКОМ."
+  "item.ae2objects.deep_item_cell_housing": "Корпус глибокої комірки зберігання предметів ME",
+  "item.ae2objects.deep_item_storage_cell_1k": "1К ME глибока комірка зберігання предметів",
+  "item.ae2objects.deep_item_storage_cell_4k": "4К ME глибока комірка зберігання предметів",
+  "item.ae2objects.deep_item_storage_cell_16k": "16К ME глибока комірка зберігання предметів",
+  "item.ae2objects.deep_item_storage_cell_64k": "64К ME глибока комірка зберігання предметів",
+  "item.ae2objects.deep_item_storage_cell_256k": "256К ME глибока комірка зберігання предметів",
+  "text.ae2objects.deep_item_storage_cells": "Глибокі комірки зберігання предметів ME",
+  "command.ae2objects.recover_success": "%s відновив глибоку комірку зберігання предметів з UUID [%s].",
+  "command.ae2objects.recover_fail": "Не вдалося відновити глибоку комірку зберігання предметів: UUID [%s] не існує.",
+  "command.ae2objects.getuuid_success": "UUID комірки зберігання: [%s]",
+  "command.ae2objects.getuuid_fail_nouuid": "Помилка, оскільки комірка зберігання порожня/не знайдено UUID.",
+  "command.ae2objects.getuuid_fail_notcell": "Помилка, предмет не є глибокою коміркою зберігання предметів."
 }

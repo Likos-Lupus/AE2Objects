@@ -18,7 +18,7 @@ import org.jspecify.annotations.Nullable;
 
 public class DiskStorageManager extends SavedData {
 
-    public static final String MANAGER_NAME = "disk_manager";
+    public static final String MANAGER_NAME = "storage_manager";
 
     public static final Codec<DiskStorageManager> CODEC = RecordCodecBuilder.create(
             instance -> instance.group(
