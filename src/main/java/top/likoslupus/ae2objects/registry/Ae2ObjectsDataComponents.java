@@ -32,6 +32,13 @@ public final class Ae2ObjectsDataComponents {
                     .networkSynchronized(ByteBufCodecs.VAR_LONG)
     );
 
+    public static final Supplier<DataComponentType<Integer>> CELL_TYPE_COUNT = COMPONENTS.registerComponentType(
+            "cell_type_count",
+            builder -> builder
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+    );
+
     public static final Supplier<DataComponentType<FuzzyMode>> FUZZY_MODE = COMPONENTS.registerComponentType(
             "fuzzy_mode",
             builder -> builder

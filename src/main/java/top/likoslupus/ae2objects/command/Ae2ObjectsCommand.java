@@ -71,6 +71,7 @@ public class Ae2ObjectsCommand {
         var storageManager = DiskStorageAccess.getOrNull();
 
         if (storageManager != null && storageManager.hasUUID(uuid)) {
+            var diskStorage = storageManager.getOrCreateDisk(uuid);
             var stack = new ItemStack(Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_256K.get());
             stack.set(
                     Ae2ObjectsDataComponents.CELL_ID.get(),
@@ -78,7 +79,11 @@ public class Ae2ObjectsCommand {
             );
             stack.set(
                     Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(),
-                    storageManager.getOrCreateDisk(uuid).getItemCount()
+                    diskStorage.getItemCount()
+            );
+            stack.set(
+                    Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(),
+                    diskStorage.getStoredTypesCount()
             );
 
             player.addItem(stack);

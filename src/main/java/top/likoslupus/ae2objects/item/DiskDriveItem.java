@@ -1,6 +1,7 @@
 package top.likoslupus.ae2objects.item;
 
 import appeng.api.config.FuzzyMode;
+import appeng.api.ids.AEComponents;
 import appeng.api.stacks.AEKeyType;
 import appeng.api.storage.cells.CellState;
 import appeng.api.upgrades.IUpgradeInventory;
@@ -16,6 +17,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -29,10 +31,7 @@ import top.likoslupus.ae2objects.storage.DiskCellInventory;
 import top.likoslupus.ae2objects.storage.DiskCellItem;
 import top.likoslupus.ae2objects.storage.DiskStorageAccess;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 
@@ -53,6 +52,7 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
         super(
                 new Properties().setId(id).stacksTo(1).fireResistant()
                         .component(Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(), 0L)
+                        .component(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(), 0)
                         .component(Ae2ObjectsDataComponents.FUZZY_MODE.get(), FuzzyMode.IGNORE_ALL)
         );
         this.bytes = kilobytes * 1000;
@@ -167,6 +167,11 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
     }
 
     @Override
+    public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
+        return getCellTooltipImage(stack);
+    }
+
+    @Override
     public int getBytes(ItemStack cellItem) {
         return bytes;
     }
@@ -212,9 +217,15 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
                         Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(),
                         clonedStorage.getItemCount()
                 );
+                newStack.set(
+                        Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(),
+                        clonedStorage.getStoredTypesCount()
+                );
                 storageManager.updateDisk(id, clonedStorage);
             } else {
                 newStack.remove(Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get());
+                newStack.remove(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get());
+                newStack.remove(AEComponents.STORAGE_CELL_INV);
             }
 
             return newStack;

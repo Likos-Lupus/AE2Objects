@@ -9,9 +9,11 @@ import appeng.me.cells.BasicCellHandler;
 import appeng.util.ConfigInventory;
 import com.google.common.base.Preconditions;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DiskCellItem extends ICellWorkbenchItem {
 
@@ -50,6 +52,11 @@ public interface DiskCellItem extends ICellWorkbenchItem {
     ) {
         Preconditions.checkArgument(is.getItem() == this);
         DiskCellHandler.INSTANCE.addCellInformationToTooltip(is, lines);
+    }
+
+    default Optional<TooltipComponent> getCellTooltipImage(ItemStack is) {
+        Preconditions.checkArgument(is.getItem() == this);
+        return DiskCellHandler.INSTANCE.getTooltipImage(is);
     }
 
     ItemStack clone(ItemStack item);

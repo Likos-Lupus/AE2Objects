@@ -3,11 +3,9 @@ package top.likoslupus.ae2objects.storage;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
+import appeng.api.ids.AEComponents;
 import appeng.api.networking.security.IActionSource;
-import appeng.api.stacks.AEItemKey;
-import appeng.api.stacks.AEKey;
-import appeng.api.stacks.AEKeyType;
-import appeng.api.stacks.KeyCounter;
+import appeng.api.stacks.*;
 import appeng.api.storage.cells.CellState;
 import appeng.api.storage.cells.ISaveProvider;
 import appeng.api.storage.cells.StorageCell;
@@ -29,6 +27,9 @@ import org.slf4j.Logger;
 import top.likoslupus.ae2objects.item.DiskDriveItem;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -96,9 +97,20 @@ public class DiskCellInventory implements StorageCell {
 
     private void initData() {
         if (hasDiskUUID()) {
-            var diskStorage = getDiskStorage();
-            this.storedItems = diskStorage.getStoredTypesCount();
-            this.storedItemCount = diskStorage.getItemCount();
+            if (storageManager != null) {
+                var diskStorage = getDiskStorage();
+                this.storedItems = diskStorage.getStoredTypesCount();
+                this.storedItemCount = diskStorage.getItemCount();
+            } else {
+                this.storedItems = i.getOrDefault(
+                        Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(),
+                        0
+                );
+                this.storedItemCount = i.getOrDefault(
+                        Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(),
+                        0L
+                );
+            }
         } else {
             this.storedItems = 0;
             this.storedItemCount = 0;
@@ -172,6 +184,8 @@ public class DiskCellInventory implements StorageCell {
                 storageManager.removeDisk(diskUuid);
                 i.remove(Ae2ObjectsDataComponents.CELL_ID.get());
                 i.remove(Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get());
+                i.remove(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get());
+                i.remove(AEComponents.STORAGE_CELL_INV);
                 initData();
             }
             return;
@@ -191,12 +205,14 @@ public class DiskCellInventory implements StorageCell {
         var keys = new ListTag();
         var ops = storageManager.getRegistries()
                 .createSerializationContext(NbtOps.INSTANCE);
+        var previewList = new ArrayList<GenericStack>();
 
         for (var entry : amountsMap.object2LongEntrySet()) {
             var amount = entry.getLongValue();
 
             if (amount > 0) {
                 itemCount += amount;
+                previewList.add(new GenericStack(entry.getKey(), amount));
                 var keyTag = AEKey.CODEC.encodeStart(
                         ops,
                         entry.getKey()
@@ -213,6 +229,8 @@ public class DiskCellInventory implements StorageCell {
                     diskUuid,
                     new DiskStorage()
             );
+            i.remove(AEComponents.STORAGE_CELL_INV);
+            i.remove(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get());
         } else {
             storageManager.modifyDisk(
                     diskUuid,
@@ -220,6 +238,13 @@ public class DiskCellInventory implements StorageCell {
                     amounts.toArray(new long[0]),
                     itemCount
             );
+            // Sort preview stacks descending by amount and keep up to 10 for tooltip rendering
+            previewList.sort(Comparator.comparingLong(GenericStack::amount).reversed());
+            if (previewList.size() > 10) {
+                previewList.subList(10, previewList.size()).clear();
+            }
+            i.set(AEComponents.STORAGE_CELL_INV, previewList);
+            i.set(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(), amountsMap.size());
         }
 
         this.storedItems = amountsMap.size();
@@ -305,6 +330,18 @@ public class DiskCellInventory implements StorageCell {
 
     private void loadCellItems() {
         if (this.storageManager == null) {
+            List<GenericStack> previewStacks = i.getOrDefault(
+                    AEComponents.STORAGE_CELL_INV,
+                    List.of()
+            );
+            var amountsMap = this.storedAmounts;
+            if (amountsMap == null) {
+                amountsMap = new Object2LongOpenHashMap<>();
+                this.storedAmounts = amountsMap;
+            }
+            for (var stack : previewStacks) {
+                amountsMap.put(stack.what(), stack.amount());
+            }
             return;
         }
 
@@ -462,6 +499,12 @@ public class DiskCellInventory implements StorageCell {
     public long getNbtItemCount() {
         return hasDiskUUID()
                 ? i.getOrDefault(Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(), 0L)
+                : 0;
+    }
+
+    public long getNbtItemTypes() {
+        return hasDiskUUID()
+                ? i.getOrDefault(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(), 0)
                 : 0;
     }
 
