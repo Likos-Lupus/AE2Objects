@@ -24,7 +24,6 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
-import top.likoslupus.ae2objects.item.DiskDriveItem;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 
 import java.util.ArrayList;
@@ -35,14 +34,14 @@ import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.requireNonNull;
 
-public class DiskCellInventory implements StorageCell {
+public class DeepCellInventory implements StorageCell {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private final DiskCellItem cellType;
+    private final DeepCellItem cellType;
     private final @Nullable ISaveProvider container;
     private final AEKeyType keyType;
-    private final @Nullable DiskStorageManager storageManager;
+    private final @Nullable DeepStorageManager storageManager;
     private IPartitionList partitionList;
     private IncludeExclude partitionListMode;
     private int storedItems;
@@ -51,11 +50,11 @@ public class DiskCellInventory implements StorageCell {
     private final ItemStack i;
     private boolean isPersisted = true;
 
-    public DiskCellInventory(
-            DiskCellItem cellType,
+    public DeepCellInventory(
+            DeepCellItem cellType,
             ItemStack stack,
             @Nullable ISaveProvider saveProvider,
-            @Nullable DiskStorageManager storageManager
+            @Nullable DeepStorageManager storageManager
     ) {
         this.cellType = cellType;
         this.i = stack;
@@ -89,18 +88,18 @@ public class DiskCellInventory implements StorageCell {
         partitionList = builder.build();
     }
 
-    private DiskStorage getDiskStorage() {
-        return getDiskUUID() != null && storageManager != null
-                ? storageManager.getOrCreateDisk(getDiskUUID())
-                : DiskStorage.empty();
+    private DeepCellStorage getCellStorage() {
+        return getCellUUID() != null && storageManager != null
+                ? storageManager.getOrCreateCell(getCellUUID())
+                : DeepCellStorage.empty();
     }
 
     private void initData() {
-        if (hasDiskUUID()) {
+        if (hasCellUUID()) {
             if (storageManager != null) {
-                var diskStorage = getDiskStorage();
-                this.storedItems = diskStorage.getStoredTypesCount();
-                this.storedItemCount = diskStorage.getItemCount();
+                var cellStorage = getCellStorage();
+                this.storedItems = cellStorage.getStoredTypesCount();
+                this.storedItemCount = cellStorage.getItemCount();
             } else {
                 this.storedItems = i.getOrDefault(
                         Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(),
@@ -178,10 +177,10 @@ public class DiskCellInventory implements StorageCell {
             return;
         }
 
-        var diskUuid = getDiskUUID();
+        var cellUuid = getCellUUID();
         if (storedItemCount == 0) {
-            if (diskUuid != null) {
-                storageManager.removeDisk(diskUuid);
+            if (cellUuid != null) {
+                storageManager.removeCell(cellUuid);
                 i.remove(Ae2ObjectsDataComponents.CELL_ID.get());
                 i.remove(Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get());
                 i.remove(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get());
@@ -191,7 +190,7 @@ public class DiskCellInventory implements StorageCell {
             return;
         }
 
-        if (diskUuid == null) {
+        if (cellUuid == null) {
             return;
         }
 
@@ -225,15 +224,15 @@ public class DiskCellInventory implements StorageCell {
         }
 
         if (keys.isEmpty()) {
-            storageManager.updateDisk(
-                    diskUuid,
-                    new DiskStorage()
+            storageManager.updateCell(
+                    cellUuid,
+                    new DeepCellStorage()
             );
             i.remove(AEComponents.STORAGE_CELL_INV);
             i.remove(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get());
         } else {
-            storageManager.modifyDisk(
-                    diskUuid,
+            storageManager.modifyCell(
+                    cellUuid,
                     keys,
                     amounts.toArray(new long[0]),
                     itemCount
@@ -259,14 +258,14 @@ public class DiskCellInventory implements StorageCell {
         return null;
     }
 
-    public static @Nullable DiskCellInventory createInventory(
+    public static @Nullable DeepCellInventory createInventory(
             ItemStack stack,
             @Nullable ISaveProvider saveProvider,
-            @Nullable DiskStorageManager storageManager
+            @Nullable DeepStorageManager storageManager
     ) {
         requireNonNull(stack, "Cannot create cell inventory for null itemstack");
 
-        if (!(stack.getItem() instanceof DiskCellItem cellType)) {
+        if (!(stack.getItem() instanceof DeepCellItem cellType)) {
             return null;
         }
 
@@ -274,7 +273,7 @@ public class DiskCellInventory implements StorageCell {
             return null;
         }
 
-        return new DiskCellInventory(
+        return new DeepCellInventory(
                 cellType,
                 stack,
                 saveProvider,
@@ -282,16 +281,16 @@ public class DiskCellInventory implements StorageCell {
         );
     }
 
-    public boolean hasDiskUUID() {
+    public boolean hasCellUUID() {
         return i.has(Ae2ObjectsDataComponents.CELL_ID.get());
     }
 
-    public static boolean hasDiskUUID(ItemStack disk) {
-        return disk.getItem() instanceof DiskCellItem
-                && disk.has(Ae2ObjectsDataComponents.CELL_ID.get());
+    public static boolean hasCellUUID(ItemStack cell) {
+        return cell.getItem() instanceof DeepCellItem
+                && cell.has(Ae2ObjectsDataComponents.CELL_ID.get());
     }
 
-    public @Nullable UUID getDiskUUID() {
+    public @Nullable UUID getCellUUID() {
         return i.get(Ae2ObjectsDataComponents.CELL_ID.get());
     }
 
@@ -300,13 +299,13 @@ public class DiskCellInventory implements StorageCell {
         return type != null && !type.storableInStorageCell();
     }
 
-    private static @Nullable DiskDriveItem getStorageCell(AEItemKey itemKey) {
-        return itemKey.getItem() instanceof DiskDriveItem diskDrive
-                ? diskDrive
+    private static @Nullable DeepCellItem getStorageCell(AEItemKey itemKey) {
+        return itemKey.getItem() instanceof DeepCellItem deepCell
+                ? deepCell
                 : null;
     }
 
-    private static boolean isCellEmpty(@Nullable DiskCellInventory inv) {
+    private static boolean isCellEmpty(@Nullable DeepCellInventory inv) {
         return inv == null || inv.getAvailableStacks().isEmpty();
     }
 
@@ -345,9 +344,9 @@ public class DiskCellInventory implements StorageCell {
             return;
         }
 
-        var diskStorage = getDiskStorage();
-        var amounts = diskStorage.getStackAmounts();
-        var tags = diskStorage.getStackKeys();
+        var cellStorage = getCellStorage();
+        var amounts = cellStorage.getStackAmounts();
+        var tags = cellStorage.getStackKeys();
         if (amounts.length != tags.size()) {
             LOGGER.warn(
                     "Loading storage cell with mismatched amounts/tags: {} != {}",
@@ -435,10 +434,10 @@ public class DiskCellInventory implements StorageCell {
             }
         }
 
-        if (storageManager != null && !hasDiskUUID()) {
+        if (storageManager != null && !hasCellUUID()) {
             var newUuid = UUID.randomUUID();
             i.set(Ae2ObjectsDataComponents.CELL_ID.get(), newUuid);
-            storageManager.getOrCreateDisk(newUuid);
+            storageManager.getOrCreateCell(newUuid);
             loadCellItems();
         }
 
@@ -497,13 +496,13 @@ public class DiskCellInventory implements StorageCell {
     }
 
     public long getNbtItemCount() {
-        return hasDiskUUID()
+        return hasCellUUID()
                 ? i.getOrDefault(Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(), 0L)
                 : 0;
     }
 
     public long getNbtItemTypes() {
-        return hasDiskUUID()
+        return hasCellUUID()
                 ? i.getOrDefault(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(), 0)
                 : 0;
     }

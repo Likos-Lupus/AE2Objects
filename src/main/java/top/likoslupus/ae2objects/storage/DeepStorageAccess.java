@@ -5,17 +5,17 @@ import net.minecraft.server.MinecraftServer;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
-public final class DiskStorageAccess {
+public final class DeepStorageAccess {
 
-    private static @Nullable DiskStorageManager currentManager;
+    private static @Nullable DeepStorageManager currentManager;
     private static @Nullable MinecraftServer currentServer;
 
-    private DiskStorageAccess() {
+    private DeepStorageAccess() {
     }
 
     public static void onServerStarted(MinecraftServer server) {
         currentServer = server;
-        currentManager = DiskStorageManager.getInstance(server);
+        currentManager = DeepStorageManager.getInstance(server);
     }
 
     public static void onServerStopped(MinecraftServer server) {
@@ -25,12 +25,12 @@ public final class DiskStorageAccess {
         }
     }
 
-    public static Optional<DiskStorageManager> get() {
+    public static Optional<DeepStorageManager> get() {
         return Optional.ofNullable(currentManager);
     }
 
     @Nullable
-    public static DiskStorageManager getOrNull() {
+    public static DeepStorageManager getOrNull() {
         return currentManager;
     }
 

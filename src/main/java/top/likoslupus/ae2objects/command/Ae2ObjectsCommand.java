@@ -15,8 +15,8 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import top.likoslupus.ae2objects.Ae2Objects;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
-import top.likoslupus.ae2objects.storage.DiskCellItem;
-import top.likoslupus.ae2objects.storage.DiskStorageAccess;
+import top.likoslupus.ae2objects.storage.DeepCellItem;
+import top.likoslupus.ae2objects.storage.DeepStorageAccess;
 
 import java.util.UUID;
 
@@ -30,7 +30,7 @@ public class Ae2ObjectsCommand {
                 .then(Commands.literal("recover")
                         .then(Commands.argument("uuid", UuidArgument.uuid())
                                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
-                                .executes(context -> spawnDrive(
+                                .executes(context -> spawnCell(
                                         context,
                                         context.getArgument("uuid", UUID.class)
                                 ))
@@ -63,15 +63,15 @@ public class Ae2ObjectsCommand {
         return 0;
     }
 
-    private static int spawnDrive(
+    private static int spawnCell(
             CommandContext<CommandSourceStack> context,
             UUID uuid
     ) throws CommandSyntaxException {
         var player = (Player) context.getSource().getPlayerOrException();
-        var storageManager = DiskStorageAccess.getOrNull();
+        var storageManager = DeepStorageAccess.getOrNull();
 
         if (storageManager != null && storageManager.hasUUID(uuid)) {
-            var diskStorage = storageManager.getOrCreateDisk(uuid);
+            var cellStorage = storageManager.getOrCreateCell(uuid);
             var stack = new ItemStack(Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_256K.get());
             stack.set(
                     Ae2ObjectsDataComponents.CELL_ID.get(),
@@ -79,11 +79,11 @@ public class Ae2ObjectsCommand {
             );
             stack.set(
                     Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(),
-                    diskStorage.getItemCount()
+                    cellStorage.getItemCount()
             );
             stack.set(
                     Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(),
-                    diskStorage.getStoredTypesCount()
+                    cellStorage.getStoredTypesCount()
             );
 
             player.addItem(stack);
@@ -108,7 +108,7 @@ public class Ae2ObjectsCommand {
     ) throws CommandSyntaxException {
         var player = (Player) context.getSource().getPlayerOrException();
         var mainStack = player.getMainHandItem();
-        if (mainStack.getItem() instanceof DiskCellItem) {
+        if (mainStack.getItem() instanceof DeepCellItem) {
             var cellId = mainStack.get(Ae2ObjectsDataComponents.CELL_ID.get());
             if (cellId != null) {
                 var text = copyToClipboard(cellId.toString());

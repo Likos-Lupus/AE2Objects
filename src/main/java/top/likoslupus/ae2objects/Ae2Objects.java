@@ -12,7 +12,7 @@ import top.likoslupus.ae2objects.command.Ae2ObjectsCommand;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Integration;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
-import top.likoslupus.ae2objects.storage.DiskStorageAccess;
+import top.likoslupus.ae2objects.storage.DeepStorageAccess;
 
 import java.util.function.Supplier;
 
@@ -49,11 +49,11 @@ public class Ae2Objects {
     }
 
     private void onServerStarted(ServerStartedEvent event) {
-        DiskStorageAccess.onServerStarted(event.getServer());
+        DeepStorageAccess.onServerStarted(event.getServer());
     }
 
     private void onServerStopped(ServerStoppedEvent event) {
-        DiskStorageAccess.onServerStopped(event.getServer());
+        DeepStorageAccess.onServerStopped(event.getServer());
     }
 
 }

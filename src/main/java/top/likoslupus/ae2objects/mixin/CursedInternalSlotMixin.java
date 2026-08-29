@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.likoslupus.ae2objects.storage.DiskCellItem;
+import top.likoslupus.ae2objects.storage.DeepCellItem;
 
 @Mixin(AbstractContainerMenu.class)
 public abstract class CursedInternalSlotMixin {
@@ -37,7 +37,7 @@ public abstract class CursedInternalSlotMixin {
             ),
             cancellable = true
     )
-    public void cloneDisk(
+    public void cloneCell(
             int slotIndex,
             int buttonNum,
             ContainerInput containerInput,
@@ -46,8 +46,8 @@ public abstract class CursedInternalSlotMixin {
     ) {
         var slot = this.slots.get(slotIndex);
         var stack = slot.getItem();
-        if (stack.getItem() instanceof DiskCellItem diskCellItem) {
-            var newStack = diskCellItem.clone(stack);
+        if (stack.getItem() instanceof DeepCellItem deepCellItem) {
+            var newStack = deepCellItem.clone(stack);
             this.setCarried(newStack);
             ci.cancel();
         }

@@ -13,36 +13,35 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
-import top.likoslupus.ae2objects.item.DiskDriveItem;
 
 import java.util.*;
 import java.util.stream.IntStream;
 import org.jspecify.annotations.Nullable;
 
-public class DiskCellHandler implements ICellHandler {
+public class DeepCellHandler implements ICellHandler {
 
-    public static final DiskCellHandler INSTANCE = new DiskCellHandler();
+    public static final DeepCellHandler INSTANCE = new DeepCellHandler();
 
     @Override
     public boolean isCell(ItemStack is) {
-        return is.getItem() instanceof DiskDriveItem;
+        return is.getItem() instanceof DeepCellItem;
     }
 
     @Override
-    public @Nullable DiskCellInventory getCellInventory(
+    public @Nullable DeepCellInventory getCellInventory(
             ItemStack is,
             @Nullable ISaveProvider container
     ) {
-        return DiskCellInventory.createInventory(
+        return DeepCellInventory.createInventory(
                 is,
                 container,
-                DiskStorageAccess.getOrNull()
+                DeepStorageAccess.getOrNull()
         );
     }
 
     public void addCellInformationToTooltip(ItemStack stack, List<Component> lines) {
         // Explicitly don't pass a storage manager since this only needs info stored on the item
-        var handler = DiskCellInventory.createInventory(
+        var handler = DeepCellInventory.createInventory(
                 stack,
                 null,
                 null
@@ -52,10 +51,10 @@ public class DiskCellHandler implements ICellHandler {
             return;
         }
 
-        var uuid = handler.getDiskUUID();
+        var uuid = handler.getCellUUID();
         if (uuid != null) {
             lines.add(
-                    Component.literal("Disk UUID: ")
+                    Component.literal("Cell UUID: ")
                             .withStyle(ChatFormatting.GRAY)
                             .append(
                                     Component.literal(uuid.toString())
@@ -108,7 +107,7 @@ public class DiskCellHandler implements ICellHandler {
     }
 
     public Optional<TooltipComponent> getTooltipImage(ItemStack is) {
-        var handler = DiskCellInventory.createInventory(
+        var handler = DeepCellInventory.createInventory(
                 is,
                 null,
                 null

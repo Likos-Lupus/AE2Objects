@@ -7,32 +7,32 @@ import net.minecraft.nbt.ListTag;
 
 import java.util.Arrays;
 
-public final class DiskStorage {
+public final class DeepCellStorage {
 
     private static final String STACK_KEYS = "keys";
     private static final String STACK_AMOUNTS = "amts";
     private static final String ITEM_COUNT_TAG = "item_count";
 
-    public static final Codec<DiskStorage> CODEC = RecordCodecBuilder.create(
+    public static final Codec<DeepCellStorage> CODEC = RecordCodecBuilder.create(
             instance -> instance.group(
                     CompoundTag.CODEC.fieldOf("data")
-                            .forGetter(DiskStorage::toNbt)
+                            .forGetter(DeepCellStorage::toNbt)
             ).apply(
                     instance,
-                    DiskStorage::fromNbt
+                    DeepCellStorage::fromNbt
             ));
 
     private ListTag stackKeys;
     private long[] stackAmounts;
     private long itemCount;
 
-    public DiskStorage() {
+    public DeepCellStorage() {
         this.stackKeys = new ListTag();
         this.stackAmounts = new long[0];
         this.itemCount = 0;
     }
 
-    public DiskStorage(
+    public DeepCellStorage(
             ListTag stackKeys,
             long[] stackAmounts,
             long itemCount
@@ -76,12 +76,12 @@ public final class DiskStorage {
         this.itemCount = newItemCount;
     }
 
-    public DiskStorage copy() {
-        return new DiskStorage(this.stackKeys, this.stackAmounts, this.itemCount);
+    public DeepCellStorage copy() {
+        return new DeepCellStorage(this.stackKeys, this.stackAmounts, this.itemCount);
     }
 
-    public static DiskStorage empty() {
-        return new DiskStorage();
+    public static DeepCellStorage empty() {
+        return new DeepCellStorage();
     }
 
     public CompoundTag toNbt() {
@@ -94,11 +94,11 @@ public final class DiskStorage {
         return nbt;
     }
 
-    public static DiskStorage fromNbt(CompoundTag nbt) {
+    public static DeepCellStorage fromNbt(CompoundTag nbt) {
         var stackKeys = nbt.getList(STACK_KEYS).orElseGet(ListTag::new);
         var stackAmounts = nbt.getLongArray(STACK_AMOUNTS).orElse(new long[0]);
         var itemCount = nbt.getLongOr(ITEM_COUNT_TAG, 0L);
-        return new DiskStorage(stackKeys, stackAmounts, itemCount);
+        return new DeepCellStorage(stackKeys, stackAmounts, itemCount);
     }
 
 }

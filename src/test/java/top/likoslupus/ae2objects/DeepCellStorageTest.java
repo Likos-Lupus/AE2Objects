@@ -3,11 +3,11 @@ package top.likoslupus.ae2objects;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import org.junit.jupiter.api.Test;
-import top.likoslupus.ae2objects.storage.DiskStorage;
+import top.likoslupus.ae2objects.storage.DeepCellStorage;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class DiskStorageTest {
+class DeepCellStorageTest {
 
     @Test
     void testCopyIsDeepAndIndependent() {
@@ -22,7 +22,7 @@ class DiskStorageTest {
         var amounts = new long[]{100L};
         var itemCount = 100L;
 
-        var original = new DiskStorage(
+        var original = new DeepCellStorage(
                 keys,
                 amounts,
                 itemCount
@@ -77,10 +77,10 @@ class DiskStorageTest {
         var amounts = new long[]{42L};
         var itemCount = 42L;
 
-        var storage = new DiskStorage(keys, amounts, itemCount);
+        var storage = new DeepCellStorage(keys, amounts, itemCount);
         var nbt = storage.toNbt();
 
-        var deserialized = DiskStorage.fromNbt(nbt);
+        var deserialized = DeepCellStorage.fromNbt(nbt);
 
         assertEquals(
                 storage.getItemCount(),

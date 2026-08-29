@@ -26,10 +26,9 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
-import top.likoslupus.ae2objects.storage.DiskCellInventory;
-import top.likoslupus.ae2objects.storage.DiskCellItem;
-import top.likoslupus.ae2objects.storage.DiskStorageAccess;
+import top.likoslupus.ae2objects.storage.DeepCellInventory;
+import top.likoslupus.ae2objects.storage.DeepCellItem;
+import top.likoslupus.ae2objects.storage.DeepStorageAccess;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -37,17 +36,21 @@ import org.jspecify.annotations.Nullable;
 
 import static appeng.api.storage.StorageCells.getCellInventory;
 
-public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
+public class DeepStorageCellItem extends Item implements DeepCellItem, AEToolItem {
 
     private final int bytes;
     private final double idleDrain;
     private final ItemLike coreItem;
+    private final ItemLike housingItem;
+    private final AEKeyType keyType;
 
-    public DiskDriveItem(
+    public DeepStorageCellItem(
             ResourceKey<Item> id,
             ItemLike coreItem,
+            ItemLike housingItem,
             int kilobytes,
-            double idleDrain
+            double idleDrain,
+            AEKeyType keyType
     ) {
         super(
                 new Properties().setId(id).stacksTo(1).fireResistant()
@@ -57,12 +60,14 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
         );
         this.bytes = kilobytes * 1000;
         this.coreItem = coreItem;
+        this.housingItem = housingItem;
         this.idleDrain = idleDrain;
+        this.keyType = keyType;
     }
 
     public static int getColor(ItemStack stack, int tintIndex) {
         if (tintIndex == 1) {
-            var cellInv = DiskCellInventory.createInventory(
+            var cellInv = DeepCellInventory.createInventory(
                     stack,
                     null,
                     null
@@ -93,7 +98,7 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
 
     @Override
     public AEKeyType getKeyType() {
-        return AEKeyType.items();
+        return this.keyType;
     }
 
     @Override
@@ -103,13 +108,13 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
             final InteractionHand hand
     ) {
         if (level instanceof ServerLevel serverLevel) {
-            this.disassembleDrive(player.getItemInHand(hand), serverLevel, player);
+            this.disassembleCell(player.getItemInHand(hand), serverLevel, player);
         }
 
         return InteractionResult.SUCCESS;
     }
 
-    private boolean disassembleDrive(
+    private boolean disassembleCell(
             final ItemStack stack,
             final ServerLevel level,
             final @Nullable Player player
@@ -133,7 +138,7 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
 
                     // drop empty storage cell housing
                     playerInventory.placeItemBackInInventory(
-                            new ItemStack(Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING.get())
+                            new ItemStack(housingItem)
                     );
 
                     return true;
@@ -182,7 +187,7 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
             UseOnContext context
     ) {
         if (context.getLevel() instanceof ServerLevel serverLevel) {
-            return this.disassembleDrive(stack, serverLevel, context.getPlayer())
+            return this.disassembleCell(stack, serverLevel, context.getPlayer())
                     ? InteractionResult.SUCCESS
                     : InteractionResult.PASS;
         }
@@ -208,10 +213,10 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
             newStack.set(Ae2ObjectsDataComponents.CELL_ID.get(), id);
             newStack.setCount(newStack.getMaxStackSize());
 
-            // Deep clone the disk if storage manager is available
-            var storageManager = DiskStorageAccess.getOrNull();
+            // Deep clone the cell storage if storage manager is available
+            var storageManager = DeepStorageAccess.getOrNull();
             if (storageManager != null) {
-                var originalStorage = storageManager.getOrCreateDisk(cellId);
+                var originalStorage = storageManager.getOrCreateCell(cellId);
                 var clonedStorage = originalStorage.copy();
                 newStack.set(
                         Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get(),
@@ -221,7 +226,7 @@ public class DiskDriveItem extends Item implements DiskCellItem, AEToolItem {
                         Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get(),
                         clonedStorage.getStoredTypesCount()
                 );
-                storageManager.updateDisk(id, clonedStorage);
+                storageManager.updateCell(id, clonedStorage);
             } else {
                 newStack.remove(Ae2ObjectsDataComponents.CELL_ITEM_COUNT.get());
                 newStack.remove(Ae2ObjectsDataComponents.CELL_TYPE_COUNT.get());

@@ -16,82 +16,82 @@ import java.util.Map;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
-public class DiskStorageManager extends SavedData {
+public class DeepStorageManager extends SavedData {
 
     public static final String MANAGER_NAME = "storage_manager";
 
-    public static final Codec<DiskStorageManager> CODEC = RecordCodecBuilder.create(
+    public static final Codec<DeepStorageManager> CODEC = RecordCodecBuilder.create(
             instance -> instance.group(
-                    Codec.unboundedMap(UUIDUtil.STRING_CODEC, DiskStorage.CODEC)
-                            .fieldOf("disks")
-                            .forGetter(DiskStorageManager::getDisks)
+                    Codec.unboundedMap(UUIDUtil.STRING_CODEC, DeepCellStorage.CODEC)
+                            .fieldOf("cells")
+                            .forGetter(DeepStorageManager::getCells)
             ).apply(
                     instance,
-                    DiskStorageManager::new
+                    DeepStorageManager::new
             ));
 
-    public static final SavedDataType<DiskStorageManager> TYPE = new SavedDataType<>(
+    public static final SavedDataType<DeepStorageManager> TYPE = new SavedDataType<>(
             Ae2Objects.id(MANAGER_NAME),
-            DiskStorageManager::new,
+            DeepStorageManager::new,
             CODEC
     );
 
-    private final Map<UUID, DiskStorage> disks;
+    private final Map<UUID, DeepCellStorage> cells;
     private @Nullable WeakReference<HolderLookup.Provider> registries;
 
-    public DiskStorageManager() {
-        this.disks = new HashMap<>();
+    public DeepStorageManager() {
+        this.cells = new HashMap<>();
         this.setDirty();
     }
 
-    public DiskStorageManager(Map<UUID, DiskStorage> disks) {
-        this.disks = new HashMap<>(disks);
+    public DeepStorageManager(Map<UUID, DeepCellStorage> cells) {
+        this.cells = new HashMap<>(cells);
         this.setDirty();
     }
 
-    public Map<UUID, DiskStorage> getDisks() {
-        return disks;
+    public Map<UUID, DeepCellStorage> getCells() {
+        return cells;
     }
 
-    public void updateDisk(
+    public void updateCell(
             UUID uuid,
-            DiskStorage dataStorage
+            DeepCellStorage dataStorage
     ) {
-        disks.put(uuid, dataStorage);
+        cells.put(uuid, dataStorage);
         setDirty();
     }
 
-    public void removeDisk(UUID uuid) {
-        disks.remove(uuid);
+    public void removeCell(UUID uuid) {
+        cells.remove(uuid);
         setDirty();
     }
 
     public boolean hasUUID(UUID uuid) {
-        return disks.containsKey(uuid);
+        return cells.containsKey(uuid);
     }
 
-    public DiskStorage getOrCreateDisk(UUID uuid) {
-        return disks.computeIfAbsent(
+    public DeepCellStorage getOrCreateCell(UUID uuid) {
+        return cells.computeIfAbsent(
                 uuid,
                 _ -> {
                     setDirty();
-                    return new DiskStorage();
+                    return new DeepCellStorage();
                 }
         );
     }
 
-    public void modifyDisk(
-            UUID diskID,
+    public void modifyCell(
+            UUID cellId,
             ListTag stackKeys,
             long[] stackAmounts,
             long itemCount
     ) {
-        var diskToModify = getOrCreateDisk(diskID);
-        diskToModify.update(stackKeys, stackAmounts, itemCount);
-        updateDisk(diskID, diskToModify);
+        var cellToModify = getOrCreateCell(cellId);
+        cellToModify.update(stackKeys, stackAmounts, itemCount);
+        updateCell(cellId, cellToModify);
     }
 
-    public static DiskStorageManager getInstance(MinecraftServer server) {
+    public static DeepStorageManager getInstance(MinecraftServer server) {
         var manager = server.overworld().getDataStorage().computeIfAbsent(TYPE);
         manager.registries = new WeakReference<>(server.registryAccess());
         return manager;
@@ -101,13 +101,13 @@ public class DiskStorageManager extends SavedData {
         var r = this.registries;
         if (r == null) {
             throw new IllegalStateException(
-                    "DiskStorageManager was not initialized properly with registries."
+                    "DeepStorageManager was not initialized properly with registries."
             );
         }
         var currentRegistries = r.get();
         if (currentRegistries == null) {
             throw new IllegalStateException(
-                    "Using a DiskStorageManager whose server was already closed"
+                    "Using a DeepStorageManager whose server was already closed"
             );
         }
         return currentRegistries;

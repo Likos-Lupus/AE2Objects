@@ -15,7 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.List;
 import java.util.Optional;
 
-public interface DiskCellItem extends ICellWorkbenchItem {
+public interface DeepCellItem extends ICellWorkbenchItem {
 
     AEKeyType getKeyType();
 
@@ -51,12 +51,12 @@ public interface DiskCellItem extends ICellWorkbenchItem {
             List<Component> lines
     ) {
         Preconditions.checkArgument(is.getItem() == this);
-        DiskCellHandler.INSTANCE.addCellInformationToTooltip(is, lines);
+        DeepCellHandler.INSTANCE.addCellInformationToTooltip(is, lines);
     }
 
     default Optional<TooltipComponent> getCellTooltipImage(ItemStack is) {
         Preconditions.checkArgument(is.getItem() == this);
-        return DiskCellHandler.INSTANCE.getTooltipImage(is);
+        return DeepCellHandler.INSTANCE.getTooltipImage(is);
     }
 
     ItemStack clone(ItemStack item);
