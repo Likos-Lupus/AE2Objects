@@ -1,6 +1,6 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
-license = "MIT"
+license = "LGPL-3.0"
 
 [[mods]]
 modId = "ae2objects"
@@ -8,7 +8,7 @@ version = "${version}"
 displayName = "AE2Objects"
 logoFile = "icon.png"
 credits = "Based on AE2Things by ProjectET and Technici4n."
-authors = "Likos-Lupus, ProjectET, Technici4n"
+authors = "Likos-Lupus, Chiloven945"
 description = '''
 Adds Deep Storage Cells to Applied Energistics 2.
 '''
