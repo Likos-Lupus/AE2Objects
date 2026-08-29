@@ -3,8 +3,8 @@
 [![Stars](https://img.shields.io/github/stars/Likos-Lupus/AE2Objects?style=flat-square&label=Stars&labelColor=444444&color=eac54f)](https://github.com/Likos-Lupus/AE2Objects/)
 [![Release](https://img.shields.io/github/v/release/Likos-Lupus/AE2Objects?style=flat-square&labelColor=444444&label=Release&include_prereleases)](https://github.com/Likos-Lupus/AE2Objects/releases)
 [![GitHub CI](https://img.shields.io/github/actions/workflow/status/Likos-Lupus/AE2Objects/build.yml?style=flat-square&labelColor=444444&branch=master&label=GitHub%20CI)](https://github.com/Likos-Lupus/AE2Objects/actions/workflows/build.yml)
-[![Modrinth](https://img.shields.io/badge/Modrinth-AE2%20Objcts-22ff84?style=flat-square&labelColor=444444)](https://modrinth.com/mod/ae2-objects/)
-[![CurseForge](https://img.shields.io/badge/CurseForge-AE2%20Objcts-f16436?style=flat-square&labelColor=444444)](https://www.curseforge.com/minecraft/mc-mods/ae2-objects)
+[![Modrinth](https://img.shields.io/badge/Modrinth-AE2%20Objects-22ff84?style=flat-square&labelColor=444444)](https://modrinth.com/mod/ae2-objects/)
+[![CurseForge](https://img.shields.io/badge/CurseForge-AE2%20Objects-f16436?style=flat-square&labelColor=444444)](https://www.curseforge.com/minecraft/mc-mods/ae2-objects)
 
 A **NeoForge addon mod** for **Applied Energistics 2** that introduces high-density **Deep Storage
 Cells** with **no type limits**.
@@ -89,7 +89,9 @@ maintained by **Technici4n**.
 
 ## License
 
-This project is licensed under the [GNU Lesser General Public License v3.0 (LGPL-3.0)](LICENSE).
+This project is licensed under
+the [GNU Lesser General Public License v3.0 (LGPL-3.0)](https://github.com/Likos-Lupus/AE2Objects/blob/master/LICENSE).
 
-The original AE2Things copyright notices are preserved in [`LICENSE`](LICENSE), along with the
-continued project copyright notices.
+The original AE2Things copyright notices are preserved in [
+`LICENSE`](https://github.com/Likos-Lupus/AE2Objects/blob/master/LICENSE), along with the continued
+project copyright notices.
