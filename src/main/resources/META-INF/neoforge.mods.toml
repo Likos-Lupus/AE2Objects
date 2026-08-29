@@ -10,9 +10,7 @@ logoFile = "icon.png"
 credits = "Based on AE2Things by ProjectET and Technici4n."
 authors = "Likos-Lupus, ProjectET, Technici4n"
 description = '''
-This mod adds Deep Item Storage Cells to Applied Energistics 2.
-These cells have no type limits and one item counts as one byte.
-Due to limitations with the cell format, you lose 24 bytes per kibibyte, but hey a small price to pay for no types right?
+Adds Deep Storage Cells to Applied Energistics 2.
 '''
 
 [[mixins]]

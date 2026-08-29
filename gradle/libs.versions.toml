@@ -1,8 +1,12 @@
 [versions]
+mod = "0.1.0"
+
 minecraft = "26.1.2"
 neoforge = "26.1.2.98"
 moddev = "2.0.144"
+
 ae2 = "26.1.10-beta"
+
 jspecify = "1.0.0"
 foojay-resolver = "0.9.0"
 junit = "6.1.3"

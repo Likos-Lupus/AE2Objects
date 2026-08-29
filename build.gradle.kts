@@ -4,8 +4,28 @@ plugins {
     alias(libs.plugins.moddev)
 }
 
+val modVersion = libs.versions.mod.get()
+val mcVersion = libs.versions.minecraft.get()
+val releaseVersion = "$modVersion+$mcVersion"
+
+fun getGitCommitHash(): String {
+    return try {
+        val result = providers.exec {
+            commandLine("git", "rev-parse", "--short=7", "HEAD")
+            isIgnoreExitValue = true
+        }
+        val output = result.standardOutput.asText.get().trim()
+        if (output.matches(Regex("^[0-9a-fA-F]{7}$"))) output else "unknown"
+    } catch (_: Exception) {
+        "unknown"
+    }
+}
+
+val commitHash = getGitCommitHash()
+val defaultVersion = "$releaseVersion-$commitHash"
+
 group = "top.likoslupus"
-version = providers.environmentVariable("AE2OBJECTS_VERSION").getOrElse("0.0.0-dev")
+version = defaultVersion
 base.archivesName.set("ae2objects")
 
 repositories {
@@ -64,6 +84,27 @@ tasks.named<Jar>("jar") {
     manifest {
         attributes(
             "Implementation-Version" to project.version
+        )
+    }
+}
+
+tasks.register<Jar>("releaseJar") {
+    group = "build"
+    description = "Assembles a release jar archive without commit hash."
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(sourceSets.main.get().output) {
+        exclude("META-INF/neoforge.mods.toml")
+    }
+    from("src/main/resources/META-INF/neoforge.mods.toml") {
+        into("META-INF")
+        expand(mapOf("version" to releaseVersion))
+    }
+    archiveBaseName.set("ae2objects")
+    archiveVersion.set(releaseVersion)
+    archiveClassifier.set("")
+    manifest {
+        attributes(
+            "Implementation-Version" to releaseVersion
         )
     }
 }
