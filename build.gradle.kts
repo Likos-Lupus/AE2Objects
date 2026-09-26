@@ -4,9 +4,19 @@ plugins {
     alias(libs.plugins.moddev)
 }
 
-val modVersion = libs.versions.mod.get()
-val mcVersion = libs.versions.minecraft.get()
-val releaseVersion = "$modVersion+$mcVersion"
+val defaultVersion = libs.versions.mod.get()
+val mcVersion = sc.current.version
+val commitHash = getGitCommitHash()
+
+// Default (dirty) build: <default_version>-<commit>+<minecraft_version>
+// Release build (releaseJar): <default_version>+<minecraft_version>
+version = "$defaultVersion-$commitHash+$mcVersion"
+val releaseVersion = "$defaultVersion+$mcVersion"
+
+val neoForgeVersion = when (mcVersion) {
+    "26.1.2" -> libs.versions.neoforge.get()
+    else -> error("No NeoForge version configured for Minecraft $mcVersion")
+}
 
 fun getGitCommitHash(): String {
     return try {
@@ -21,11 +31,7 @@ fun getGitCommitHash(): String {
     }
 }
 
-val commitHash = getGitCommitHash()
-val defaultVersion = "$releaseVersion-$commitHash"
-
 group = "top.likoslupus"
-version = defaultVersion
 base.archivesName.set("ae2objects")
 
 repositories {
@@ -49,7 +55,7 @@ dependencies {
 sourceSets {
     main {
         resources {
-            srcDir("src/generated/resources")
+            srcDir(rootProject.file("src/generated/resources"))
         }
     }
 }
@@ -95,7 +101,7 @@ tasks.register<Jar>("releaseJar") {
     from(sourceSets.main.get().output) {
         exclude("META-INF/neoforge.mods.toml")
     }
-    from("src/main/resources/META-INF/neoforge.mods.toml") {
+    from(rootProject.file("src/main/resources/META-INF/neoforge.mods.toml")) {
         into("META-INF")
         expand(mapOf("version" to releaseVersion))
     }
@@ -109,8 +115,17 @@ tasks.register<Jar>("releaseJar") {
     }
 }
 
+tasks.register<Copy>("buildAndCollect") {
+    group = "build"
+    description = "Copies the built mod artifacts into the root build/libs directory."
+    dependsOn(tasks.named("build"))
+    from(tasks.named<Jar>("jar").flatMap { it.archiveFile })
+    from(tasks.named<Jar>("sourcesJar").flatMap { it.archiveFile })
+    into(rootProject.layout.buildDirectory.dir("libs"))
+}
+
 neoForge {
-    version = libs.versions.neoforge.get()
+    version = neoForgeVersion
 
     mods {
         create("ae2objects") {
@@ -121,22 +136,28 @@ neoForge {
     runs {
         create("client") {
             client()
+            gameDirectory.set(rootProject.layout.projectDirectory.dir("run"))
+            ideFolderName.set(mcVersion)
             systemProperty("forge.enabledGameTestNamespaces", "ae2objects")
         }
 
         create("server") {
             server()
+            gameDirectory.set(rootProject.layout.projectDirectory.dir("run"))
+            ideFolderName.set(mcVersion)
             systemProperty("forge.enabledGameTestNamespaces", "ae2objects")
             programArgument("--nogui")
         }
 
         create("serverData") {
             serverData()
+            gameDirectory.set(rootProject.layout.projectDirectory.dir("run"))
+            ideFolderName.set(mcVersion)
             programArguments.addAll(
                 "--mod", "ae2objects",
                 "--all",
-                "--output", file("src/generated/resources/").absolutePath,
-                "--existing", file("src/main/resources/").absolutePath
+                "--output", rootProject.file("src/generated/resources/").absolutePath,
+                "--existing", rootProject.file("src/main/resources/").absolutePath
             )
         }
     }
