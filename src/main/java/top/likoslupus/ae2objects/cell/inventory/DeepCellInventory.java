@@ -22,8 +22,8 @@ import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import top.likoslupus.ae2objects.cell.DeepCellItem;
-import top.likoslupus.ae2objects.cell.DeepCellSpec;
 import top.likoslupus.ae2objects.cell.DeepCellStackData;
+import top.likoslupus.ae2objects.cell.model.CellCapacity;
 import top.likoslupus.ae2objects.cell.persistence.DeepCellStorage;
 import top.likoslupus.ae2objects.cell.persistence.DeepCellStorageIo;
 import top.likoslupus.ae2objects.cell.persistence.DeepStorageManager;
@@ -45,7 +45,7 @@ import static java.util.Objects.requireNonNull;
 public final class DeepCellInventory implements StorageCell {
 
     private final DeepCellItem cellItem;
-    private final DeepCellSpec spec;
+    private final CellCapacity capacity;
     private final ItemStack stack;
     private final @Nullable ISaveProvider container;
     private final @Nullable DeepStorageManager storageManager;
@@ -64,7 +64,7 @@ public final class DeepCellInventory implements StorageCell {
             @Nullable DeepStorageManager storageManager
     ) {
         this.cellItem = cellItem;
-        this.spec = cellItem.cellSpec();
+        this.capacity = cellItem.capacity();
         this.stack = stack;
         this.container = saveProvider;
         this.storageManager = storageManager;
@@ -99,9 +99,10 @@ public final class DeepCellInventory implements StorageCell {
         var config = getConfigInventory();
         var hasInverter = upgrades != null && upgrades.isInstalled(AEItems.INVERTER_CARD);
 
-        if (spec.supportsFuzzy()
+        if (cellItem.supportsFuzzy()
                 && upgrades != null
-                && upgrades.isInstalled(AEItems.FUZZY_CARD)) {
+                && upgrades.isInstalled(AEItems.FUZZY_CARD)
+        ) {
             builder.fuzzyMode(getFuzzyMode());
         }
 
@@ -125,7 +126,7 @@ public final class DeepCellInventory implements StorageCell {
     }
 
     public FuzzyMode getFuzzyMode() {
-        return spec.supportsFuzzy()
+        return cellItem.supportsFuzzy()
                 ?
                 stack.getOrDefault(
                         Ae2ObjectsDataComponents.FUZZY_MODE.get(),
@@ -174,7 +175,8 @@ public final class DeepCellInventory implements StorageCell {
     }
 
     public boolean isFuzzy() {
-        return spec.supportsFuzzy() && partitionList instanceof FuzzyPriorityList;
+        return cellItem.supportsFuzzy()
+                && partitionList instanceof FuzzyPriorityList;
     }
 
     @Override
@@ -185,7 +187,7 @@ public final class DeepCellInventory implements StorageCell {
     private CellState statusFor(long amount) {
         return amount <= 0
                 ? CellState.EMPTY
-                : spec.capacity().isFull(amount)
+                : capacity.isFull(amount)
                         ? CellState.FULL
                         : CellState.NOT_EMPTY;
     }
@@ -262,7 +264,8 @@ public final class DeepCellInventory implements StorageCell {
 
         if (storageManager == null) {
             throw new IllegalStateException(
-                    "Cannot allocate a deep-cell UUID without server storage");
+                    "Cannot allocate a deep-cell UUID without server storage"
+            );
         }
 
         var cellId = UUID.randomUUID();
@@ -294,7 +297,7 @@ public final class DeepCellInventory implements StorageCell {
             );
             preview.stream()
                     .filter(entry ->
-                            entry.amount() > 0 && spec.keyType().contains(entry.what())
+                            entry.amount() > 0 && cellItem.getKeyType().contains(entry.what())
                     )
                     .forEach(entry ->
                             loaded.put(entry.what(), entry.amount())
@@ -306,7 +309,7 @@ public final class DeepCellInventory implements StorageCell {
         var result = DeepCellStorageIo.load(
                 getCellStorage(),
                 storageManager.registries(),
-                spec.keyType()
+                cellItem.getKeyType()
         );
         storedAmounts = result.amounts();
 
@@ -332,7 +335,7 @@ public final class DeepCellInventory implements StorageCell {
     @Override
     public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
         if (amount <= 0
-                || !spec.accepts(what)
+                || !cellItem.channel().accepts(what)
                 || !partitionList.matchesFilter(what, partitionListMode)
                 || cellItem.isBlackListed(stack, what)
                 || what instanceof AEItemKey itemKey
@@ -342,7 +345,7 @@ public final class DeepCellInventory implements StorageCell {
             return 0;
         }
 
-        var accepted = Math.min(amount, spec.capacity().remainingAmount(storedAmount));
+        var accepted = Math.min(amount, capacity.remainingAmount(storedAmount));
         if (accepted <= 0) {
             return 0;
         }
@@ -399,19 +402,19 @@ public final class DeepCellInventory implements StorageCell {
     }
 
     public long getTotalBytes() {
-        return spec.capacity().bytes();
+        return capacity.bytes();
     }
 
     public long getUsedBytes() {
-        return spec.capacity().usedBytes(storedAmount);
+        return capacity.usedBytes(storedAmount);
     }
 
     public long getFreeBytes() {
-        return spec.capacity().freeBytes(storedAmount);
+        return capacity.freeBytes(storedAmount);
     }
 
     public long getCachedUsedBytes() {
-        return spec.capacity().usedBytes(getCachedStoredAmount());
+        return capacity.usedBytes(getCachedStoredAmount());
     }
 
     public int getCachedStoredTypes() {
@@ -429,7 +432,7 @@ public final class DeepCellInventory implements StorageCell {
     }
 
     public boolean canHoldNewAmount() {
-        return spec.capacity().remainingAmount(storedAmount) > 0;
+        return capacity.remainingAmount(storedAmount) > 0;
     }
 
 }

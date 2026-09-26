@@ -101,7 +101,7 @@ public final class Ae2ObjectsCommand {
             var loaded = DeepCellStorageIo.load(
                     associatedStorage,
                     manager.registries(),
-                    deepCell.cellSpec().keyType()
+                    deepCell.getKeyType()
             );
             DeepCellStackData.updatePreview(
                     stack,

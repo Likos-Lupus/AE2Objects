@@ -11,7 +11,11 @@ import com.google.common.base.Preconditions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
+import top.likoslupus.ae2objects.cell.channel.StorageChannelBinding;
+import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
 import top.likoslupus.ae2objects.cell.inventory.DeepCellTooltip;
+import top.likoslupus.ae2objects.cell.model.CellCapacity;
+import top.likoslupus.ae2objects.cell.model.CellDefinition;
 import top.likoslupus.ae2objects.cell.persistence.DeepCellStorageIo;
 import top.likoslupus.ae2objects.cell.persistence.DeepStorageAccess;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
@@ -22,33 +26,37 @@ import java.util.UUID;
 
 /**
  * Marker and capability contract shared by every deep-cell item form.
+ *
+ * <p>The item only describes its {@link CellDefinition}; every storage-type specific value (key
+ * type, amount per byte, fuzzy support) is derived from the model plus the runtime channel
+ * registry.</p>
  */
 public interface DeepCellItem extends ICellWorkbenchItem {
 
-    default AEKeyType getKeyType() {
-        return cellSpec().keyType();
-    }
-
-    DeepCellSpec cellSpec();
-
     default int getBytes(ItemStack cellItem) {
-        return cellSpec().tier().bytes();
+        return definition().tier().bytes();
     }
+
+    CellDefinition definition();
 
     default double getIdleDrain() {
-        return cellSpec().tier().idleDrain();
-    }
-
-    default long amountPerByte() {
-        return cellSpec().capacity().amountPerByte();
+        return definition().tier().idleDrain();
     }
 
     default boolean supportsFuzzy() {
-        return cellSpec().supportsFuzzy();
+        return definition().type().supportsFuzzy();
+    }
+
+    default CellCapacity capacity() {
+        return new CellCapacity(definition().tier().bytes(), amountPerByte());
+    }
+
+    default long amountPerByte() {
+        return definition().type().amountPerByte();
     }
 
     default boolean isBlackListed(ItemStack cellItem, AEKey requestedAddition) {
-        if (!cellSpec().accepts(requestedAddition)) {
+        if (!channel().accepts(requestedAddition)) {
             return true;
         }
 
@@ -60,6 +68,10 @@ public interface DeepCellItem extends ICellWorkbenchItem {
         }
 
         return false;
+    }
+
+    default StorageChannelBinding channel() {
+        return StorageChannelRegistry.INSTANCE.require(definition().type());
     }
 
     default boolean storableInStorageCell() {
@@ -103,7 +115,10 @@ public interface DeepCellItem extends ICellWorkbenchItem {
                 .withCellItemIdIfMissing(itemId);
 
         manager.updateCell(newCellId, storage);
-        copy.set(Ae2ObjectsDataComponents.CELL_ID.get(), newCellId);
+        copy.set(
+                Ae2ObjectsDataComponents.CELL_ID.get(),
+                newCellId
+        );
         DeepCellStackData.updateSummary(
                 copy,
                 storage.storedAmount(),
@@ -113,13 +128,17 @@ public interface DeepCellItem extends ICellWorkbenchItem {
         var loaded = DeepCellStorageIo.load(
                 storage,
                 manager.registries(),
-                cellSpec().keyType()
+                getKeyType()
         );
         DeepCellStackData.updatePreview(
                 copy,
                 DeepCellStorageIo.createPreview(loaded.amounts())
         );
         return copy;
+    }
+
+    default AEKeyType getKeyType() {
+        return channel().keyType();
     }
 
 }

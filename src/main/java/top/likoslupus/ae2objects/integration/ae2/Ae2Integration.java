@@ -21,7 +21,7 @@ public final class Ae2Integration {
         event.enqueueWork(() ->
                 Ae2ObjectsItems.storageCells()
                         .forEach(registration -> {
-                            if (registration.spec().supportsFuzzy()) {
+                            if (registration.definition().type().supportsFuzzy()) {
                                 Upgrades.add(
                                         AEItems.FUZZY_CARD,
                                         registration.item().get(),

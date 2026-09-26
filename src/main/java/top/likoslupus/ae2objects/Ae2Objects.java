@@ -10,6 +10,7 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import top.likoslupus.ae2objects.cell.persistence.DeepStorageAccess;
 import top.likoslupus.ae2objects.command.Ae2ObjectsCommand;
+import top.likoslupus.ae2objects.integration.ae2.Ae2Bootstrap;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Integration;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
@@ -20,6 +21,8 @@ public final class Ae2Objects {
     public static final String MOD_ID = "ae2objects";
 
     public Ae2Objects(IEventBus modEventBus) {
+        Ae2Bootstrap.bootstrapRequired();
+
         Ae2ObjectsItems.register(modEventBus);
         Ae2ObjectsDataComponents.register(modEventBus);
 

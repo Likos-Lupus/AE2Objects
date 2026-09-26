@@ -24,9 +24,9 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import top.likoslupus.ae2objects.cell.DeepCellItem;
-import top.likoslupus.ae2objects.cell.DeepCellSpec;
 import top.likoslupus.ae2objects.cell.DeepCellStackData;
 import top.likoslupus.ae2objects.cell.inventory.DeepCellInventory;
+import top.likoslupus.ae2objects.cell.model.CellDefinition;
 import top.likoslupus.ae2objects.cell.persistence.DeepStorageAccess;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 
@@ -42,7 +42,7 @@ import static appeng.api.storage.StorageCells.getCellInventory;
 /** Standard drive/chest form of a deep storage cell. */
 public final class DeepStorageCellItem extends Item implements DeepCellItem, AEToolItem {
 
-    private final DeepCellSpec spec;
+    private final CellDefinition definition;
     private final Supplier<? extends ItemLike> coreItem;
     private final Supplier<? extends ItemLike> housingItem;
     private final int upgradeSlots;
@@ -52,22 +52,22 @@ public final class DeepStorageCellItem extends Item implements DeepCellItem, AET
             ResourceKey<Item> id,
             Supplier<? extends ItemLike> coreItem,
             Supplier<? extends ItemLike> housingItem,
-            DeepCellSpec spec,
+            CellDefinition definition,
             int upgradeSlots,
             String familyTranslationKey
     ) {
-        super(properties(id, spec));
+        super(properties(id, definition));
         if (upgradeSlots < 0) {
             throw new IllegalArgumentException("upgradeSlots must not be negative");
         }
         this.coreItem = coreItem;
         this.housingItem = housingItem;
-        this.spec = spec;
+        this.definition = definition;
         this.upgradeSlots = upgradeSlots;
         this.familyTranslationKey = familyTranslationKey;
     }
 
-    private static Properties properties(ResourceKey<Item> id, DeepCellSpec spec) {
+    private static Properties properties(ResourceKey<Item> id, CellDefinition definition) {
         var properties = new Properties()
                 .setId(id)
                 .stacksTo(1)
@@ -75,7 +75,7 @@ public final class DeepStorageCellItem extends Item implements DeepCellItem, AET
                 .component(Ae2ObjectsDataComponents.STORED_AMOUNT.get(), 0L)
                 .component(Ae2ObjectsDataComponents.STORED_TYPE_COUNT.get(), 0);
 
-        if (spec.supportsFuzzy()) {
+        if (definition.type().supportsFuzzy()) {
             properties.component(
                     Ae2ObjectsDataComponents.FUZZY_MODE.get(),
                     FuzzyMode.IGNORE_ALL
@@ -101,13 +101,13 @@ public final class DeepStorageCellItem extends Item implements DeepCellItem, AET
     }
 
     @Override
-    public DeepCellSpec cellSpec() {
-        return spec;
+    public CellDefinition definition() {
+        return definition;
     }
 
     @Override
     public ConfigInventory getConfigInventory(ItemStack stack) {
-        return CellConfig.create(Set.of(spec.keyType()), stack);
+        return CellConfig.create(Set.of(getKeyType()), stack);
     }
 
     @Override
@@ -117,7 +117,7 @@ public final class DeepStorageCellItem extends Item implements DeepCellItem, AET
 
     @Override
     public FuzzyMode getFuzzyMode(ItemStack stack) {
-        return spec.supportsFuzzy()
+        return supportsFuzzy()
                 ?
                 stack.getOrDefault(
                         Ae2ObjectsDataComponents.FUZZY_MODE.get(),
@@ -128,7 +128,7 @@ public final class DeepStorageCellItem extends Item implements DeepCellItem, AET
 
     @Override
     public void setFuzzyMode(ItemStack stack, FuzzyMode fuzzyMode) {
-        if (spec.supportsFuzzy()) {
+        if (supportsFuzzy()) {
             stack.set(Ae2ObjectsDataComponents.FUZZY_MODE.get(), fuzzyMode);
         }
     }
@@ -183,6 +183,7 @@ public final class DeepStorageCellItem extends Item implements DeepCellItem, AET
         return UpgradeInventories.forItem(stack, upgradeSlots);
     }
 
+    // FIXME: Overrides deprecated method in 'net.minecraft.world.item.Item'
     @Override
     public void appendHoverText(
             ItemStack stack,

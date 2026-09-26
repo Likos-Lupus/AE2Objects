@@ -9,7 +9,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import top.likoslupus.ae2objects.Ae2Objects;
-import top.likoslupus.ae2objects.cell.DeepCellSpec;
 import top.likoslupus.ae2objects.cell.item.DeepStorageCellItem;
 import top.likoslupus.ae2objects.cell.model.*;
 
@@ -58,7 +57,6 @@ public final class Ae2ObjectsItems {
                 .forEach(definition -> {
                     var registration = registerDeepStorageCell(
                             definition,
-                            DeepCellSpec.items(definition.tier()),
                             components.get(definition.tier()),
                             DEEP_ITEM_CELL_HOUSING
                     );
@@ -71,7 +69,6 @@ public final class Ae2ObjectsItems {
 
     public static DeepCellRegistration registerDeepStorageCell(
             CellDefinition definition,
-            DeepCellSpec spec,
             Supplier<? extends ItemLike> coreItem,
             Supplier<? extends ItemLike> housingItem
     ) {
@@ -82,7 +79,7 @@ public final class Ae2ObjectsItems {
                         ResourceKey.create(Registries.ITEM, key),
                         coreItem,
                         housingItem,
-                        spec,
+                        definition,
                         upgradeSlots,
                         definition.translationKey()
                 )
@@ -90,7 +87,6 @@ public final class Ae2ObjectsItems {
 
         var registration = new DeepCellRegistration(
                 definition,
-                spec,
                 item,
                 coreItem,
                 housingItem
