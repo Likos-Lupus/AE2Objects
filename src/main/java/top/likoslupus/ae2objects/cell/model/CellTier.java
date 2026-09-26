@@ -1,9 +1,9 @@
-package top.likoslupus.ae2objects.cell;
+package top.likoslupus.ae2objects.cell.model;
 
 import java.util.List;
 
 /**
- * Capacity and idle-drain values for every deep-cell tier described by the content specification.
+ * Capacity and idle-drain values for every deep-cell tier.
  *
  * <p>The enum contains the planned MEGA tiers as well as the currently shipped AE2 tiers. Keeping
  * the numeric model independent from item registration lets integrations opt into new tiers without
@@ -24,6 +24,7 @@ public enum CellTier {
 
     private static final List<CellTier> AE2_TIERS = List.of(K1, K4, K16, K64, K256);
     private static final List<CellTier> MEGA_TIERS = List.of(M1, M4, M16, M64, M256);
+    private static final List<CellTier> ALL = List.of(values());
 
     private final String id;
     private final int bytes;
@@ -37,6 +38,10 @@ public enum CellTier {
         this.id = id;
         this.bytes = bytes;
         this.idleDrain = idleDrain;
+    }
+
+    public static List<CellTier> all() {
+        return ALL;
     }
 
     public static List<CellTier> ae2Tiers() {

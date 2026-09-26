@@ -9,9 +9,9 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import top.likoslupus.ae2objects.Ae2Objects;
-import top.likoslupus.ae2objects.cell.CellTier;
 import top.likoslupus.ae2objects.cell.DeepCellSpec;
 import top.likoslupus.ae2objects.cell.item.DeepStorageCellItem;
+import top.likoslupus.ae2objects.cell.model.*;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -19,14 +19,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static top.likoslupus.ae2objects.Ae2Objects.id;
-
 /**
  * Content registration and catalog.
  *
- * <p>Storage-cell families are registered through one descriptor path so tier additions do not
- * need parallel field/list/model/update edits. Optional integrations can use the same registration
- * method during mod construction while keeping their foreign API references isolated.</p>
+ * <p>Storage-cell families are registered from {@link DeepCellCatalog} definitions so tier
+ * additions do not need parallel field/list/model/update edits. Optional integrations can use the
+ * same registration method during mod construction while keeping their foreign API references
+ * isolated.</p>
  */
 public final class Ae2ObjectsItems {
 
@@ -54,52 +53,47 @@ public final class Ae2ObjectsItems {
                 CellTier.K256, AEItems.CELL_COMPONENT_256K::asItem
         );
 
-        CellTier.ae2Tiers().forEach(tier -> {
-            var registration = registerDeepStorageCell(
-                    "item",
-                    DeepCellSpec.items(tier),
-                    components.get(tier),
-                    DEEP_ITEM_CELL_HOUSING,
-                    2,
-                    "text.ae2objects.deep_item_storage_cells"
-            );
-            ITEM_STORAGE_CELLS.put(tier, registration);
-        });
+        DeepCellCatalog.DRIVE_CELLS.stream()
+                .filter(definition -> definition.type() == CellContentType.ITEM)
+                .forEach(definition -> {
+                    var registration = registerDeepStorageCell(
+                            definition,
+                            DeepCellSpec.items(definition.tier()),
+                            components.get(definition.tier()),
+                            DEEP_ITEM_CELL_HOUSING
+                    );
+                    ITEM_STORAGE_CELLS.put(definition.tier(), registration);
+                });
     }
 
     private Ae2ObjectsItems() {
     }
 
     public static DeepCellRegistration registerDeepStorageCell(
-            String family,
+            CellDefinition definition,
             DeepCellSpec spec,
             Supplier<? extends ItemLike> coreItem,
-            Supplier<? extends ItemLike> housingItem,
-            int upgradeSlots,
-            String familyTranslationKey
+            Supplier<? extends ItemLike> housingItem
     ) {
-        var itemId = "deep_" + family + "_storage_cell_" + spec.tier().id();
+        var upgradeSlots = CellUpgradeProfile.forDefinition(definition).totalSlots();
         var item = ITEMS.register(
-                itemId,
+                definition.itemId(),
                 key -> new DeepStorageCellItem(
                         ResourceKey.create(Registries.ITEM, key),
                         coreItem,
                         housingItem,
                         spec,
                         upgradeSlots,
-                        familyTranslationKey
+                        definition.translationKey()
                 )
         );
 
         var registration = new DeepCellRegistration(
-                itemId,
-                family,
+                definition,
                 spec,
                 item,
                 coreItem,
-                housingItem,
-                id("block/drive/cells/" + itemId),
-                familyTranslationKey
+                housingItem
         );
         STORAGE_CELLS.add(registration);
         return registration;

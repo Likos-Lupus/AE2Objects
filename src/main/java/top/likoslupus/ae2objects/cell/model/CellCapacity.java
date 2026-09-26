@@ -1,16 +1,16 @@
-package top.likoslupus.ae2objects.cell;
+package top.likoslupus.ae2objects.cell.model;
 
 /**
- * Converts between a cell's byte capacity and the native amount used by an AE key type.
+ * Converts between a cell's byte capacity and the native amount used by a key type.
  */
-public record DeepCellCapacity(
-        int totalBytes,
+public record CellCapacity(
+        long bytes,
         long amountPerByte
 ) {
 
-    public DeepCellCapacity {
-        if (totalBytes <= 0) {
-            throw new IllegalArgumentException("totalBytes must be positive");
+    public CellCapacity {
+        if (bytes <= 0) {
+            throw new IllegalArgumentException("bytes must be positive");
         }
         if (amountPerByte <= 0) {
             throw new IllegalArgumentException("amountPerByte must be positive");
@@ -18,7 +18,7 @@ public record DeepCellCapacity(
     }
 
     public long freeBytes(long storedAmount) {
-        return Math.max(0L, (long) totalBytes - usedBytes(storedAmount));
+        return Math.max(0L, bytes - usedBytes(storedAmount));
     }
 
     public long usedBytes(long storedAmount) {
@@ -34,7 +34,7 @@ public record DeepCellCapacity(
     }
 
     public long totalAmount() {
-        return Math.multiplyExact(totalBytes, amountPerByte);
+        return Math.multiplyExact(bytes, amountPerByte);
     }
 
 }

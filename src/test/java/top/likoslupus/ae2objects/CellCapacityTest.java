@@ -1,22 +1,21 @@
 package top.likoslupus.ae2objects;
 
 import org.junit.jupiter.api.Test;
-import top.likoslupus.ae2objects.cell.DeepCellCapacity;
+import top.likoslupus.ae2objects.cell.model.CellCapacity;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Characterization tests for the deep-cell byte/native-amount math.
  *
- * <p>These lock the capacity rules documented in {@code docs/values.md} before the platform
- * redesign. They intentionally cover the item (1 amount/byte) and fluid/chemical (1000 amount/byte)
- * cases plus long-range limits.</p>
+ * <p>These lock the capacity rules documented in {@code docs/values.md}. They intentionally cover
+ * the item (1 amount/byte) and fluid/chemical (1000 amount/byte) cases plus long-range limits.</p>
  */
-class DeepCellCapacityTest {
+class CellCapacityTest {
 
     @Test
     void itemCapacityUsesOneNativeAmountPerByte() {
-        var capacity = new DeepCellCapacity(1_000, 1);
+        var capacity = new CellCapacity(1_000, 1);
 
         assertEquals(1_000L, capacity.totalAmount());
         assertEquals(0L, capacity.usedBytes(0));
@@ -30,7 +29,7 @@ class DeepCellCapacityTest {
 
     @Test
     void fluidLikeCapacityUsesExplicitAmountPerByte() {
-        var capacity = new DeepCellCapacity(1_000, 1_000);
+        var capacity = new CellCapacity(1_000, 1_000);
 
         assertEquals(1_000_000L, capacity.totalAmount());
         assertEquals(0L, capacity.usedBytes(999));
@@ -45,7 +44,7 @@ class DeepCellCapacityTest {
 
     @Test
     void negativeAmountsClampToAnEmptyCell() {
-        var capacity = new DeepCellCapacity(4_000, 1_000);
+        var capacity = new CellCapacity(4_000, 1_000);
 
         assertEquals(0L, capacity.usedBytes(-1));
         assertEquals(4_000L, capacity.freeBytes(-1));
@@ -57,25 +56,25 @@ class DeepCellCapacityTest {
     void constructorRejectsNonPositiveValues() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DeepCellCapacity(0, 1)
+                () -> new CellCapacity(0, 1)
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DeepCellCapacity(1, 0)
+                () -> new CellCapacity(1, 0)
         );
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DeepCellCapacity(1, -1)
+                () -> new CellCapacity(1, -1)
         );
     }
 
     @Test
     void largestDocumentedTierStaysWellInsideLong() {
-        var fluid = new DeepCellCapacity(256_000_000, 1_000);
+        var fluid = new CellCapacity(256_000_000, 1_000);
         assertEquals(256_000_000_000L, fluid.totalAmount());
         assertEquals(256_000_000L, fluid.freeBytes(0));
 
-        var chemical = new DeepCellCapacity(256_000_000, 1_000);
+        var chemical = new CellCapacity(256_000_000, 1_000);
         assertEquals(256_000_000_000L, chemical.totalAmount());
     }
 

@@ -399,7 +399,7 @@ public final class DeepCellInventory implements StorageCell {
     }
 
     public long getTotalBytes() {
-        return spec.capacity().totalBytes();
+        return spec.capacity().bytes();
     }
 
     public long getUsedBytes() {

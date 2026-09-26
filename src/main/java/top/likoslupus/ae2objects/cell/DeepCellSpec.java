@@ -2,8 +2,9 @@ package top.likoslupus.ae2objects.cell;
 
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.AEKeyType;
+import top.likoslupus.ae2objects.cell.model.CellCapacity;
+import top.likoslupus.ae2objects.cell.model.CellTier;
 
-import java.util.Objects;
 import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNull;
@@ -38,15 +39,27 @@ public record DeepCellSpec(
     }
 
     public static DeepCellSpec items(CellTier tier) {
-        return new DeepCellSpec(tier, AEKeyType.items(), 1L, true, ACCEPT_ALL);
+        return new DeepCellSpec(
+                tier,
+                AEKeyType.items(),
+                1L,
+                true,
+                ACCEPT_ALL
+        );
     }
 
     public static DeepCellSpec fluids(CellTier tier) {
-        return new DeepCellSpec(tier, AEKeyType.fluids(), FLUID_AMOUNT_PER_BYTE, false, ACCEPT_ALL);
+        return new DeepCellSpec(
+                tier,
+                AEKeyType.fluids(),
+                FLUID_AMOUNT_PER_BYTE,
+                false,
+                ACCEPT_ALL
+        );
     }
 
-    public DeepCellCapacity capacity() {
-        return new DeepCellCapacity(tier.bytes(), amountPerByte);
+    public CellCapacity capacity() {
+        return new CellCapacity(tier.bytes(), amountPerByte);
     }
 
     public boolean accepts(AEKey key) {
