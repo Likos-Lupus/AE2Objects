@@ -4,7 +4,7 @@
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "CursedInternalSlotMixin"
+    "DeepCellCopyMixin"
   ],
   "injectors": {
     "defaultRequire": 1

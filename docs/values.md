@@ -30,9 +30,9 @@ Storage capacity in native units. There is **no type limit**; only the total byt
 
 Rules:
 
-- **Items** — `1 byte = 1 item` (`amountPerUnit = 1`).
-- **Fluids** — `1 byte = 1000 mB = 1 bucket` (`amountPerUnit = 1000`).
-- **Chemicals** — `1 byte = 1000 units` (`amountPerUnit = 1000`).
+- **Items** — `1 byte = 1 item` (`amountPerByte = 1`).
+- **Fluids** — `1 byte = 1000 mB = 1 bucket` (`amountPerByte = 1000`).
+- **Chemicals** — `1 byte = 1000 units` (`amountPerByte = 1000`).
 
 | Tier |       Bytes |    Item cap |  Fluid cap (mB) | Fluid cap (B) |    Chemical cap |
 |------|------------:|------------:|----------------:|--------------:|----------------:|
@@ -50,32 +50,33 @@ Rules:
 ## 3. Key-type unit math
 
 The inventory converts between stored **units** (what the AE network moves) and **bytes** (the
-capacity accounting unit) using the key type's `amountPerUnit`.
+capacity accounting unit) using the deep-cell family's explicit `amountPerByte`. This is intentionally
+not inherited from AE2's basic-cell `AEKeyType#getAmountPerByte()` ratio.
 
-| Key type               | `amountPerUnit` | Unit symbol         | 1 byte stores |
+| Key type               | `amountPerByte` | Unit symbol         | 1 byte stores |
 |------------------------|----------------:|---------------------|---------------|
 | `AEKeyType.items()`    |               1 | (item)              | 1 item        |
 | `AEKeyType.fluids()`   |            1000 | `B` (mB internally) | 1000 mB       |
 | `MekanismKeyType.TYPE` |            1000 | chemical unit       | 1000 units    |
 
-Formulas used by `DeepCellInventory`:
+Formulas implemented by `DeepCellCapacity`:
 
 ```
-amountPerUnit       = keyType.getAmountPerUnit()
-usedBytes           = storedItemCount / amountPerUnit
+amountPerByte       = cellSpec.amountPerByte()
+usedBytes           = storedAmount / amountPerByte
 freeBytes           = totalBytes - usedBytes
-remainingItemCount  = totalBytes * amountPerUnit - storedItemCount
+remainingAmount  = totalBytes * amountPerByte - storedAmount
 ```
 
-Insertion is clamped to `remainingItemCount`; there is no per-type byte overhead.
+Insertion is clamped to `remainingAmount`; there is no per-type byte overhead.
 
 ## 4. Numeric limits
 
-- Stored amounts and `remainingItemCount` are `long`. The largest value is the `256m` fluid/chemical
+- Stored amounts and `remainingAmount` are `long`. The largest value is the `256m` fluid/chemical
   cell: `256,000,000 bytes × 1000 = 256,000,000,000` units (~2.56 × 10¹¹), well within `long`.
 - `getBytes()` returns an `int`. The largest tier, `256m`, is `256,000,000`, within the `int` range
   (~2.147 × 10⁹). Byte arithmetic internally uses `long`.
-- The `cell_item_count` data component and `DeepCellStorage.item_count` are `long`.
+- The legacy `cell_item_count` data component and persisted `item_count` field store the native `storedAmount` as `long`.
 
 ## 5. Portable cell values
 

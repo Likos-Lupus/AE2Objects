@@ -19,6 +19,8 @@ This documentation covers the planned expansion of the mod to support:
 | [`content.md`](content.md)           | Item catalog: housings, storage cells, portable cells, ID scheme, upgrade support.                          |
 | [`values.md`](values.md)             | Numeric reference: tiers, byte capacities, idle drain, key-type unit math.                                  |
 | [`integrations.md`](integrations.md) | AE2 / MEGA Cells / Applied Mekanistics integration details and soft-dependency rules.                       |
+| [`refactor-plan.md`](refactor-plan.md) | Refactor rationale, compatibility choices, and recommended expansion order.                              |
+| [`implementation-plan.md`](implementation-plan.md) | Work items and key implementation details for the platform redesign (phases, migration map, tests). |
 
 ## Conventions used in these documents
 

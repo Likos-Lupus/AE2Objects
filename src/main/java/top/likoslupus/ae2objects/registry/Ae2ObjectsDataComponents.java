@@ -25,14 +25,18 @@ public final class Ae2ObjectsDataComponents {
                     .networkSynchronized(UUIDUtil.STREAM_CODEC)
     );
 
-    public static final Supplier<DataComponentType<Long>> CELL_ITEM_COUNT = COMPONENTS.registerComponentType(
+    /**
+     * Total native AE amount stored in the cell. The registry id intentionally stays
+     * {@code cell_item_count} for save compatibility with releases that only supported items.
+     */
+    public static final Supplier<DataComponentType<Long>> STORED_AMOUNT = COMPONENTS.registerComponentType(
             "cell_item_count",
             builder -> builder
                     .persistent(Codec.LONG)
                     .networkSynchronized(ByteBufCodecs.VAR_LONG)
     );
 
-    public static final Supplier<DataComponentType<Integer>> CELL_TYPE_COUNT = COMPONENTS.registerComponentType(
+    public static final Supplier<DataComponentType<Integer>> STORED_TYPE_COUNT = COMPONENTS.registerComponentType(
             "cell_type_count",
             builder -> builder
                     .persistent(Codec.INT)

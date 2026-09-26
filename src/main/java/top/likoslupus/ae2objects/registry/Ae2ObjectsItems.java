@@ -1,116 +1,120 @@
 package top.likoslupus.ae2objects.registry;
 
-import appeng.api.stacks.AEKeyType;
 import appeng.core.definitions.AEItems;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.ItemLike;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import top.likoslupus.ae2objects.Ae2Objects;
-import top.likoslupus.ae2objects.item.DeepStorageCellItem;
+import top.likoslupus.ae2objects.cell.CellTier;
+import top.likoslupus.ae2objects.cell.DeepCellSpec;
+import top.likoslupus.ae2objects.cell.item.DeepStorageCellItem;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static top.likoslupus.ae2objects.Ae2Objects.id;
 
+/**
+ * Content registration and catalog.
+ *
+ * <p>Storage-cell families are registered through one descriptor path so tier additions do not
+ * need parallel field/list/model/update edits. Optional integrations can use the same registration
+ * method during mod construction while keeping their foreign API references isolated.</p>
+ */
 public final class Ae2ObjectsItems {
 
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(Ae2Objects.MOD_ID);
+    public static final DeferredRegister.Items ITEMS =
+            DeferredRegister.createItems(Ae2Objects.MOD_ID);
 
     public static final DeferredItem<Item> DEEP_ITEM_CELL_HOUSING = ITEMS.register(
             "deep_item_cell_housing",
-            key -> new Item(
-                    new Item.Properties()
-                            .setId(ResourceKey.create(Registries.ITEM, key))
-                            .stacksTo(64)
-                            .fireResistant()
-            )
-    );
-    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_1K = ITEMS.register(
-            "deep_item_storage_cell_1k",
-            key -> new DeepStorageCellItem(
-                    ResourceKey.create(Registries.ITEM, key),
-                    AEItems.CELL_COMPONENT_1K.asItem(),
-                    DEEP_ITEM_CELL_HOUSING,
-                    1,
-                    0.5f,
-                    AEKeyType.items()
-            )
-    );
-    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_4K = ITEMS.register(
-            "deep_item_storage_cell_4k",
-            key -> new DeepStorageCellItem(
-                    ResourceKey.create(Registries.ITEM, key),
-                    AEItems.CELL_COMPONENT_4K.asItem(),
-                    DEEP_ITEM_CELL_HOUSING,
-                    4,
-                    1.0f,
-                    AEKeyType.items()
-            )
-    );
-    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_16K = ITEMS.register(
-            "deep_item_storage_cell_16k",
-            key -> new DeepStorageCellItem(
-                    ResourceKey.create(Registries.ITEM, key),
-                    AEItems.CELL_COMPONENT_16K.asItem(),
-                    DEEP_ITEM_CELL_HOUSING,
-                    16,
-                    1.5f,
-                    AEKeyType.items()
-            )
-    );
-    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_64K = ITEMS.register(
-            "deep_item_storage_cell_64k",
-            key -> new DeepStorageCellItem(
-                    ResourceKey.create(Registries.ITEM, key),
-                    AEItems.CELL_COMPONENT_64K.asItem(),
-                    DEEP_ITEM_CELL_HOUSING,
-                    64,
-                    2.0f,
-                    AEKeyType.items()
-            )
-    );
-    public static final DeferredItem<Item> DEEP_ITEM_STORAGE_CELL_256K = ITEMS.register(
-            "deep_item_storage_cell_256k",
-            key -> new DeepStorageCellItem(
-                    ResourceKey.create(Registries.ITEM, key),
-                    AEItems.CELL_COMPONENT_256K.asItem(),
-                    DEEP_ITEM_CELL_HOUSING,
-                    256,
-                    2.5f,
-                    AEKeyType.items()
-            )
+            key -> new Item(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, key))
+                    .stacksTo(64)
+                    .fireResistant())
     );
 
-    public static final List<Supplier<Item>> DEEP_ITEM_STORAGE_CELLS = List.of(
-            DEEP_ITEM_STORAGE_CELL_1K,
-            DEEP_ITEM_STORAGE_CELL_4K,
-            DEEP_ITEM_STORAGE_CELL_16K,
-            DEEP_ITEM_STORAGE_CELL_64K,
-            DEEP_ITEM_STORAGE_CELL_256K
-    );
+    private static final List<DeepCellRegistration> STORAGE_CELLS = new ArrayList<>();
+    private static final Map<CellTier, DeepCellRegistration> ITEM_STORAGE_CELLS =
+            new EnumMap<>(CellTier.class);
 
-    public static final Identifier MODEL_DEEP_ITEM_STORAGE_CELL_1K = id(
-            "block/drive/cells/deep_item_storage_cell_1k"
-    );
-    public static final Identifier MODEL_DEEP_ITEM_STORAGE_CELL_4K = id(
-            "block/drive/cells/deep_item_storage_cell_4k"
-    );
-    public static final Identifier MODEL_DEEP_ITEM_STORAGE_CELL_16K = id(
-            "block/drive/cells/deep_item_storage_cell_16k"
-    );
-    public static final Identifier MODEL_DEEP_ITEM_STORAGE_CELL_64K = id(
-            "block/drive/cells/deep_item_storage_cell_64k"
-    );
-    public static final Identifier MODEL_DEEP_ITEM_STORAGE_CELL_256K = id(
-            "block/drive/cells/deep_item_storage_cell_256k"
-    );
+    static {
+        var components = Map.<CellTier, Supplier<? extends ItemLike>>of(
+                CellTier.K1, AEItems.CELL_COMPONENT_1K::asItem,
+                CellTier.K4, AEItems.CELL_COMPONENT_4K::asItem,
+                CellTier.K16, AEItems.CELL_COMPONENT_16K::asItem,
+                CellTier.K64, AEItems.CELL_COMPONENT_64K::asItem,
+                CellTier.K256, AEItems.CELL_COMPONENT_256K::asItem
+        );
+
+        CellTier.ae2Tiers().forEach(tier -> {
+            var registration = registerDeepStorageCell(
+                    "item",
+                    DeepCellSpec.items(tier),
+                    components.get(tier),
+                    DEEP_ITEM_CELL_HOUSING,
+                    2,
+                    "text.ae2objects.deep_item_storage_cells"
+            );
+            ITEM_STORAGE_CELLS.put(tier, registration);
+        });
+    }
 
     private Ae2ObjectsItems() {
+    }
+
+    public static DeepCellRegistration registerDeepStorageCell(
+            String family,
+            DeepCellSpec spec,
+            Supplier<? extends ItemLike> coreItem,
+            Supplier<? extends ItemLike> housingItem,
+            int upgradeSlots,
+            String familyTranslationKey
+    ) {
+        var itemId = "deep_" + family + "_storage_cell_" + spec.tier().id();
+        var item = ITEMS.register(
+                itemId,
+                key -> new DeepStorageCellItem(
+                        ResourceKey.create(Registries.ITEM, key),
+                        coreItem,
+                        housingItem,
+                        spec,
+                        upgradeSlots,
+                        familyTranslationKey
+                )
+        );
+
+        var registration = new DeepCellRegistration(
+                itemId,
+                family,
+                spec,
+                item,
+                coreItem,
+                housingItem,
+                id("block/drive/cells/" + itemId),
+                familyTranslationKey
+        );
+        STORAGE_CELLS.add(registration);
+        return registration;
+    }
+
+    public static List<DeepCellRegistration> storageCells() {
+        return List.copyOf(STORAGE_CELLS);
+    }
+
+    public static DeepCellRegistration itemStorageCell(CellTier tier) {
+        var registration = ITEM_STORAGE_CELLS.get(tier);
+        if (registration == null) {
+            throw new IllegalArgumentException("No item deep cell registered for tier " + tier);
+        }
+        return registration;
     }
 
     public static void register(IEventBus eventBus) {

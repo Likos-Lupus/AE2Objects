@@ -6,9 +6,9 @@
   "item.ae2objects.deep_item_storage_cell_64k": "Célula de Armazenamento Profundo de Itens ME 64k",
   "item.ae2objects.deep_item_storage_cell_256k": "Célula de Armazenamento Profundo de Itens ME 256k",
   "text.ae2objects.deep_item_storage_cells": "Células de Armazenamento Profundo de Itens ME",
-  "command.ae2objects.recover_success": "%s recuperou uma Célula de Armazenamento Profundo de Itens com o UUID de [%s].",
-  "command.ae2objects.recover_fail": "Falha ao recuperar Célula de Armazenamento Profundo de Itens: UUID [%s] não existe.",
+  "command.ae2objects.recover_success": "%s recuperou uma Célula de Armazenamento Profundo com o UUID de [%s].",
+  "command.ae2objects.recover_fail": "Falha ao recuperar Célula de Armazenamento Profundo: UUID [%s] não existe.",
   "command.ae2objects.getuuid_success": "UUID de determinada Célula de Armazenamento é: [%s]",
   "command.ae2objects.getuuid_fail_nouuid": "Erro, dado que a Célula de Armazenamento está vazia/nenhum UUID encontrado.",
-  "command.ae2objects.getuuid_fail_notcell": "Erro, o item fornecido não é uma Célula de Armazenamento Profundo de Itens."
+  "command.ae2objects.getuuid_fail_notcell": "Erro, o item fornecido não é uma Célula de Armazenamento Profundo."
 }

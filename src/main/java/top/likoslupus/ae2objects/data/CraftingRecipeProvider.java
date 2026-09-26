@@ -1,7 +1,6 @@
 package top.likoslupus.ae2objects.data;
 
 import appeng.core.definitions.AEBlocks;
-import appeng.core.definitions.AEItems;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;
@@ -10,10 +9,9 @@ import net.minecraft.data.recipes.RecipeProvider;
 import net.neoforged.neoforge.common.Tags;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class CraftingRecipeProvider extends RecipeProvider {
+public final class CraftingRecipeProvider extends RecipeProvider {
 
     public CraftingRecipeProvider(
             HolderLookup.Provider registries,
@@ -24,21 +22,16 @@ public class CraftingRecipeProvider extends RecipeProvider {
 
     @Override
     protected void buildRecipes() {
-        cellRecipes();
-        housingRecipe();
+        storageCellRecipes();
+        itemHousingRecipe();
     }
 
-    private void cellRecipes() {
-        var componentsToCell = Map.of(
-                AEItems.CELL_COMPONENT_1K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_1K,
-                AEItems.CELL_COMPONENT_4K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_4K,
-                AEItems.CELL_COMPONENT_16K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_16K,
-                AEItems.CELL_COMPONENT_64K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_64K,
-                AEItems.CELL_COMPONENT_256K, Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELL_256K
-        );
-
-        componentsToCell.forEach((component, cell) -> {
-            shaped(RecipeCategory.MISC, cell.get())
+    private void storageCellRecipes() {
+        Ae2ObjectsItems.storageCells().forEach(registration -> {
+            var cell = registration.item().get();
+            var component = registration.coreItem().get();
+            var housing = registration.housingItem().get();
+            shaped(RecipeCategory.MISC, cell)
                     .pattern("aba")
                     .pattern("bcb")
                     .pattern("ded")
@@ -49,17 +42,19 @@ public class CraftingRecipeProvider extends RecipeProvider {
                     .define('e', Tags.Items.GEMS_AMETHYST)
                     .unlockedBy("has_netherite", has(Tags.Items.INGOTS_NETHERITE))
                     .save(output);
-
-            shapeless(RecipeCategory.MISC, cell.get())
-                    .requires(Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING)
+            shapeless(RecipeCategory.MISC, cell)
+                    .requires(housing)
                     .requires(component)
-                    .unlockedBy("has_housing", has(Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING))
+                    .unlockedBy("has_housing", has(housing))
                     .unlockedBy("has_component", has(component))
-                    .save(output, cell.getId().withSuffix("_with_housing").toString());
+                    .save(
+                            output,
+                            registration.item().getId().withSuffix("_with_housing").toString()
+                    );
         });
     }
 
-    private void housingRecipe() {
+    private void itemHousingRecipe() {
         shaped(RecipeCategory.MISC, Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING)
                 .pattern("aba")
                 .pattern("b b")
@@ -91,7 +86,7 @@ public class CraftingRecipeProvider extends RecipeProvider {
 
         @Override
         public String getName() {
-            return "Ae2Objects Recipes";
+            return "AE2Objects Recipes";
         }
 
     }

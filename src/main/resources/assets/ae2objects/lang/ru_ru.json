@@ -6,9 +6,9 @@
   "item.ae2objects.deep_item_storage_cell_64k": "64К ME глубокая ячейка хранения предметов",
   "item.ae2objects.deep_item_storage_cell_256k": "256К ME глубокая ячейка хранения предметов",
   "text.ae2objects.deep_item_storage_cells": "Глубокие ячейки хранения предметов ME",
-  "command.ae2objects.recover_success": "%s восстановил глубокую ячейку хранения предметов с UUID [%s].",
-  "command.ae2objects.recover_fail": "Не удалось восстановить глубокую ячейку хранения предметов: UUID [%s] не существует.",
+  "command.ae2objects.recover_success": "%s восстановил глубокую ячейку хранения с UUID [%s].",
+  "command.ae2objects.recover_fail": "Не удалось восстановить глубокую ячейку хранения: UUID [%s] не существует.",
   "command.ae2objects.getuuid_success": "Ячейка хранения получила UUID: [%s]",
   "command.ae2objects.getuuid_fail_nouuid": "Ошибка, полученная ячейка хранения пуста/не найден UUID.",
-  "command.ae2objects.getuuid_fail_notcell": "Ошибка, полученный предмет не является глубокой ячейкой хранения предметов."
+  "command.ae2objects.getuuid_fail_notcell": "Ошибка, полученный предмет не является глубокой ячейкой хранения."
 }

@@ -1,10 +1,12 @@
-package top.likoslupus.ae2objects.storage;
+package top.likoslupus.ae2objects.cell.persistence;
 
 import net.minecraft.server.MinecraftServer;
 
-import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
+/**
+ * Narrow bridge from AE2's level-less cell-handler API to the current server's SavedData.
+ */
 public final class DeepStorageAccess {
 
     private static @Nullable DeepStorageManager currentManager;
@@ -25,12 +27,7 @@ public final class DeepStorageAccess {
         }
     }
 
-    public static Optional<DeepStorageManager> get() {
-        return Optional.ofNullable(currentManager);
-    }
-
-    @Nullable
-    public static DeepStorageManager getOrNull() {
+    public static @Nullable DeepStorageManager getOrNull() {
         return currentManager;
     }
 

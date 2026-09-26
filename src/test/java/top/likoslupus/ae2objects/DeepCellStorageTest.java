@@ -3,96 +3,78 @@ package top.likoslupus.ae2objects;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import org.junit.jupiter.api.Test;
-import top.likoslupus.ae2objects.storage.DeepCellStorage;
+import top.likoslupus.ae2objects.cell.persistence.DeepCellStorage;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class DeepCellStorageTest {
 
     @Test
-    void testCopyIsDeepAndIndependent() {
+    void storageDefensivelyCopiesMutableNbtAndArrays() {
         var keys = new ListTag();
-        var key1 = new CompoundTag();
-        key1.putString(
-                "id",
-                "minecraft:iron_ingot"
-        );
-        keys.add(key1);
-
+        var key = new CompoundTag();
+        key.putString("id", "minecraft:iron_ingot");
+        keys.add(key);
         var amounts = new long[]{100L};
-        var itemCount = 100L;
 
-        var original = new DeepCellStorage(
+        var storage = new DeepCellStorage(
                 keys,
                 amounts,
-                itemCount
-        );
-        var copy = original.copy();
-
-        assertNotSame(
-                original,
-                copy
-        );
-        assertEquals(
-                original.getItemCount(),
-                copy.getItemCount()
-        );
-        assertArrayEquals(
-                original.getStackAmounts(),
-                copy.getStackAmounts()
-        );
-        assertEquals(
-                original.getStackKeys().size(),
-                copy.getStackKeys().size()
+                100L,
+                Optional.of("ae2objects:deep_item_storage_cell_1k")
         );
 
-        // Mutate original - copy must remain unaffected
-        var newKeys = new ListTag();
-        var key2 = new CompoundTag();
-        key2.putString(
-                "id",
-                "minecraft:gold_ingot"
-        );
-        newKeys.add(key2);
+        keys.clear();
+        amounts[0] = 999L;
 
-        original.update(
-                newKeys,
-                new long[]{500L},
-                500L
-        );
+        assertEquals(1, storage.stackKeys().size());
+        assertArrayEquals(new long[]{100L}, storage.stackAmounts());
 
-        assertEquals(500L, original.getItemCount());
-        assertEquals(100L, copy.getItemCount());
-        assertEquals(500L, original.getStackAmounts()[0]);
-        assertEquals(100L, copy.getStackAmounts()[0]);
+        var returnedKeys = storage.stackKeys();
+        var returnedAmounts = storage.stackAmounts();
+        returnedKeys.clear();
+        returnedAmounts[0] = 500L;
+
+        assertEquals(1, storage.stackKeys().size());
+        assertArrayEquals(new long[]{100L}, storage.stackAmounts());
     }
 
     @Test
-    void testNbtSerializationRoundTrip() {
+    void nbtSerializationKeepsLegacyPayloadShape() {
         var keys = new ListTag();
         var itemTag = new CompoundTag();
         itemTag.putString("id", "minecraft:diamond");
         keys.add(itemTag);
 
-        var amounts = new long[]{42L};
-        var itemCount = 42L;
-
-        var storage = new DeepCellStorage(keys, amounts, itemCount);
-        var nbt = storage.toNbt();
-
-        var deserialized = DeepCellStorage.fromNbt(nbt);
-
-        assertEquals(
-                storage.getItemCount(),
-                deserialized.getItemCount()
+        var storage = new DeepCellStorage(
+                keys,
+                new long[]{42L},
+                42L,
+                Optional.of("ae2objects:deep_item_storage_cell_4k")
         );
-        assertArrayEquals(
-                storage.getStackAmounts(),
-                deserialized.getStackAmounts()
+        var deserialized = DeepCellStorage.fromNbt(storage.toNbt());
+
+        assertEquals(storage.storedAmount(), deserialized.storedAmount());
+        assertArrayEquals(storage.stackAmounts(), deserialized.stackAmounts());
+        assertEquals(storage.stackKeys().size(), deserialized.stackKeys().size());
+        assertEquals(Optional.empty(), deserialized.cellItemId());
+    }
+
+    @Test
+    void addingCellItemMetadataDoesNotMutateExistingRecord() {
+        var storage = DeepCellStorage.empty();
+        var associated = storage.withCellItemIdIfMissing("ae2objects:deep_item_storage_cell_256k");
+
+        assertNotSame(storage, associated);
+        assertEquals(
+                Optional.empty(),
+                storage.cellItemId()
         );
         assertEquals(
-                storage.getStackKeys().size(),
-                deserialized.getStackKeys().size()
+                Optional.of("ae2objects:deep_item_storage_cell_256k"),
+                associated.cellItemId()
         );
     }
 

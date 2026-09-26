@@ -13,11 +13,11 @@ directly; there is no extra dependency.
 | --- | --- |
 | Key type | `appeng.api.stacks.AEKeyType.fluids()` |
 | Key class | `appeng.api.stacks.AEFluidKey` |
-| `amountPerUnit` (`getAmountPerUnit()`) | `1000` (`AEFluidKey.AMOUNT_BUCKET`) |
+| Deep-cell `amountPerByte` | `1000` (one bucket in the mod's native fluid units) |
 | Unit symbol | `B` |
 | Deep fluid housing | `ae2objects:deep_fluid_cell_housing` |
 
-Because `amountPerUnit = 1000`, one byte of a deep fluid cell stores 1000 mB (one bucket). See
+Because `amountPerByte = 1000`, one byte of a deep fluid cell stores 1000 mB (one bucket). See
 [`values.md`](values.md).
 
 ## 2. MEGA Cells (optional)
@@ -71,7 +71,7 @@ requestedAddition instanceof MekanismKey key
     && ChemicalAttributeValidator.DEFAULT.process(key.getStack())
 ```
 
-The `amountPerUnit` for `MekanismKeyType.TYPE` is taken to be `1000`, consistent with fluids and with
+The `amountPerByte` for `MekanismKeyType.TYPE` is taken to be `1000`, consistent with fluids and with
 AE-Additions' `divisible = 1000` handling (verify against the pinned appmek build when implementing).
 
 ## 4. Soft-dependency rules
@@ -90,7 +90,7 @@ Foreign mods must never be required to load AE2Objects.
    `NoClassDefFoundError`.
 
 3. **Item lookup by ID** — foreign items are resolved through
-   `BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath("megacells", "cell_component_1m"))`
+   `BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("megacells", "cell_component_1m"))`
    (or reflection on the foreign `DeferredItem`), never via a hard import in shared code.
 
 4. **Conditional recipes** — recipes referencing foreign items are gated:

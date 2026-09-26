@@ -13,10 +13,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.likoslupus.ae2objects.storage.DeepCellItem;
+import top.likoslupus.ae2objects.cell.DeepCellItem;
 
 @Mixin(AbstractContainerMenu.class)
-public abstract class CursedInternalSlotMixin {
+public abstract class DeepCellCopyMixin {
 
     @Final
     @Shadow
@@ -37,19 +37,21 @@ public abstract class CursedInternalSlotMixin {
             ),
             cancellable = true
     )
-    public void cloneCell(
+    private void ae2objects$copyDeepCellIndependently(
             int slotIndex,
             int buttonNum,
             ContainerInput containerInput,
             Player player,
-            CallbackInfo ci
+            CallbackInfo callback
     ) {
-        var slot = this.slots.get(slotIndex);
-        var stack = slot.getItem();
-        if (stack.getItem() instanceof DeepCellItem deepCellItem) {
-            var newStack = deepCellItem.clone(stack);
-            this.setCarried(newStack);
-            ci.cancel();
+        if (slotIndex < 0 || slotIndex >= slots.size()) {
+            return;
+        }
+
+        var stack = slots.get(slotIndex).getItem();
+        if (stack.getItem() instanceof DeepCellItem deepCell) {
+            setCarried(deepCell.copyWithIndependentStorage(stack));
+            callback.cancel();
         }
     }
 

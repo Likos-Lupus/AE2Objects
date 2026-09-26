@@ -8,22 +8,16 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import top.likoslupus.ae2objects.cell.persistence.DeepStorageAccess;
 import top.likoslupus.ae2objects.command.Ae2ObjectsCommand;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Integration;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
-import top.likoslupus.ae2objects.storage.DeepStorageAccess;
-
-import java.util.function.Supplier;
 
 @Mod(Ae2Objects.MOD_ID)
-public class Ae2Objects {
+public final class Ae2Objects {
 
     public static final String MOD_ID = "ae2objects";
-
-    public static Identifier id(String path) {
-        return Identifier.fromNamespaceAndPath(MOD_ID, path);
-    }
 
     public Ae2Objects(IEventBus modEventBus) {
         Ae2ObjectsItems.register(modEventBus);
@@ -43,9 +37,10 @@ public class Ae2Objects {
         }
 
         event.accept(Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING);
-        Ae2ObjectsItems.DEEP_ITEM_STORAGE_CELLS.stream()
-                .map(Supplier::get)
-                .forEach(event::accept);
+        Ae2ObjectsItems.storageCells()
+                .forEach(registration ->
+                        event.accept(registration.item().get())
+                );
     }
 
     private void onServerStarted(ServerStartedEvent event) {
@@ -54,6 +49,10 @@ public class Ae2Objects {
 
     private void onServerStopped(ServerStoppedEvent event) {
         DeepStorageAccess.onServerStopped(event.getServer());
+    }
+
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 
 }
