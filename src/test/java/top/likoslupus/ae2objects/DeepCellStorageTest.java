@@ -9,6 +9,13 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Characterization tests for the persisted deep-cell record.
+ *
+ * <p>They lock the legacy NBT payload shape ({@code keys}/{@code amts}/{@code item_count}) and the
+ * optional {@code cell_item} metadata before the platform redesign renames this type to
+ * {@code CellRecord}.</p>
+ */
 class DeepCellStorageTest {
 
     @Test
@@ -63,6 +70,45 @@ class DeepCellStorageTest {
     }
 
     @Test
+    void roundTripPreservesMultipleKeysAndAmounts() {
+        var keys = new ListTag();
+        var iron = new CompoundTag();
+        iron.putString("id", "minecraft:iron_ingot");
+        keys.add(iron);
+        var gold = new CompoundTag();
+        gold.putString("id", "minecraft:gold_ingot");
+        keys.add(gold);
+
+        var storage = new DeepCellStorage(
+                keys,
+                new long[]{10L, 20L},
+                30L,
+                Optional.of("ae2objects:deep_item_storage_cell_16k")
+        );
+        var round = DeepCellStorage.fromNbt(storage.toNbt());
+
+        assertEquals(2, round.storedTypesCount());
+        assertArrayEquals(new long[]{10L, 20L}, round.stackAmounts());
+        assertEquals(30L, round.storedAmount());
+        assertEquals(2, round.stackKeys().size());
+    }
+
+    @Test
+    void emptyFactoriesProduceEmptyStorage() {
+        var plain = DeepCellStorage.empty();
+        assertEquals(0, plain.storedTypesCount());
+        assertEquals(0L, plain.storedAmount());
+        assertEquals(Optional.empty(), plain.cellItemId());
+
+        var identified = DeepCellStorage.empty("ae2objects:deep_item_storage_cell_1k");
+        assertEquals(0, identified.storedTypesCount());
+        assertEquals(
+                Optional.of("ae2objects:deep_item_storage_cell_1k"),
+                identified.cellItemId()
+        );
+    }
+
+    @Test
     void addingCellItemMetadataDoesNotMutateExistingRecord() {
         var storage = DeepCellStorage.empty();
         var associated = storage.withCellItemIdIfMissing("ae2objects:deep_item_storage_cell_256k");
@@ -75,6 +121,18 @@ class DeepCellStorageTest {
         assertEquals(
                 Optional.of("ae2objects:deep_item_storage_cell_256k"),
                 associated.cellItemId()
+        );
+    }
+
+    @Test
+    void withCellItemIdIsNoOpWhenAlreadyPresent() {
+        var storage = DeepCellStorage.empty("ae2objects:deep_item_storage_cell_1k");
+        var same = storage.withCellItemIdIfMissing("ae2objects:deep_item_storage_cell_4k");
+
+        assertSame(storage, same);
+        assertEquals(
+                Optional.of("ae2objects:deep_item_storage_cell_1k"),
+                same.cellItemId()
         );
     }
 
