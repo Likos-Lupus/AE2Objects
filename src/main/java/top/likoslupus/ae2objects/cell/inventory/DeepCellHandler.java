@@ -4,7 +4,7 @@ import appeng.api.storage.cells.ICellHandler;
 import appeng.api.storage.cells.ISaveProvider;
 import net.minecraft.world.item.ItemStack;
 import top.likoslupus.ae2objects.cell.DeepCellItem;
-import top.likoslupus.ae2objects.cell.persistence.DeepStorageAccess;
+import top.likoslupus.ae2objects.platform.ServerCellContext;
 
 import org.jspecify.annotations.Nullable;
 
@@ -26,7 +26,11 @@ public final class DeepCellHandler implements ICellHandler {
             ItemStack stack,
             @Nullable ISaveProvider container
     ) {
-        return DeepCellInventory.createInventory(stack, container, DeepStorageAccess.getOrNull());
+        return DeepCellInventory.createInventory(
+                stack,
+                container,
+                ServerCellContext.getOrNull()
+        );
     }
 
 }

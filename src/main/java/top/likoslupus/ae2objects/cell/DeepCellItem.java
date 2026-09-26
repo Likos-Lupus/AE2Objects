@@ -16,8 +16,9 @@ import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
 import top.likoslupus.ae2objects.cell.inventory.DeepCellTooltip;
 import top.likoslupus.ae2objects.cell.model.CellCapacity;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
-import top.likoslupus.ae2objects.cell.persistence.DeepCellStorageIo;
-import top.likoslupus.ae2objects.cell.persistence.DeepStorageAccess;
+import top.likoslupus.ae2objects.cell.persistence.CellContentsCodec;
+import top.likoslupus.ae2objects.cell.persistence.CellRecord;
+import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 
 import java.util.List;
@@ -101,8 +102,8 @@ public interface DeepCellItem extends ICellWorkbenchItem {
             return copy;
         }
 
-        var manager = DeepStorageAccess.getOrNull();
-        if (manager == null) {
+        var context = ServerCellContext.getOrNull();
+        if (context == null) {
             // The authoritative clone happens server-side.
             // Do not invent an unbacked UUID client-side.
             return copy;
@@ -110,29 +111,29 @@ public interface DeepCellItem extends ICellWorkbenchItem {
 
         var newCellId = UUID.randomUUID();
         var itemId = DeepCellStackData.registeredItemId(original);
-        var storage = manager.findCell(oldCellId)
-                .orElseGet(() -> manager.emptyCell(itemId))
+        var record = context.repository().find(oldCellId)
+                .orElseGet(() -> CellRecord.empty(itemId))
                 .withCellItemIdIfMissing(itemId);
 
-        manager.updateCell(newCellId, storage);
+        context.repository().put(newCellId, record);
         copy.set(
                 Ae2ObjectsDataComponents.CELL_ID.get(),
                 newCellId
         );
         DeepCellStackData.updateSummary(
                 copy,
-                storage.storedAmount(),
-                storage.storedTypesCount()
+                record.storedAmount(),
+                record.storedTypesCount()
         );
 
-        var loaded = DeepCellStorageIo.load(
-                storage,
-                manager.registries(),
+        var decoded = CellContentsCodec.decode(
+                record,
+                context.registries(),
                 getKeyType()
         );
         DeepCellStackData.updatePreview(
                 copy,
-                DeepCellStorageIo.createPreview(loaded.amounts())
+                CellContentsCodec.preview(decoded.contents())
         );
         return copy;
     }

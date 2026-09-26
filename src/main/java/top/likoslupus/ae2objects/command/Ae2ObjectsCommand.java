@@ -18,9 +18,9 @@ import top.likoslupus.ae2objects.Ae2Objects;
 import top.likoslupus.ae2objects.cell.DeepCellItem;
 import top.likoslupus.ae2objects.cell.DeepCellStackData;
 import top.likoslupus.ae2objects.cell.model.CellTier;
-import top.likoslupus.ae2objects.cell.persistence.DeepCellStorage;
-import top.likoslupus.ae2objects.cell.persistence.DeepCellStorageIo;
-import top.likoslupus.ae2objects.cell.persistence.DeepStorageAccess;
+import top.likoslupus.ae2objects.cell.persistence.CellContentsCodec;
+import top.likoslupus.ae2objects.cell.persistence.CellRecord;
+import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
 
@@ -67,45 +67,45 @@ public final class Ae2ObjectsCommand {
             UUID uuid
     ) throws CommandSyntaxException {
         var player = context.getSource().getPlayerOrException();
-        var manager = DeepStorageAccess.getOrNull();
-        if (manager == null) {
+        var serverContext = ServerCellContext.getOrNull();
+        if (serverContext == null) {
             context.getSource().sendFailure(
                     Component.translatable("command.ae2objects.recover_fail", uuid)
             );
             return 0;
         }
 
-        var storage = manager.findCell(uuid).orElse(null);
-        if (storage == null) {
+        var record = serverContext.repository().find(uuid).orElse(null);
+        if (record == null) {
             context.getSource().sendFailure(
                     Component.translatable("command.ae2objects.recover_fail", uuid)
             );
             return 0;
         }
 
-        var recoveredItem = resolveRecoveredItem(storage);
+        var recoveredItem = resolveRecoveredItem(record);
         var stack = new ItemStack(recoveredItem);
         var itemId = BuiltInRegistries.ITEM.getKey(recoveredItem).toString();
-        var associatedStorage = storage.withCellItemIdIfMissing(itemId);
-        if (associatedStorage != storage) {
-            manager.updateCell(uuid, associatedStorage);
+        var associated = record.withCellItemIdIfMissing(itemId);
+        if (associated != record) {
+            serverContext.repository().put(uuid, associated);
         }
 
         stack.set(Ae2ObjectsDataComponents.CELL_ID.get(), uuid);
         DeepCellStackData.updateSummary(
                 stack,
-                associatedStorage.storedAmount(),
-                associatedStorage.storedTypesCount()
+                associated.storedAmount(),
+                associated.storedTypesCount()
         );
         if (recoveredItem instanceof DeepCellItem deepCell) {
-            var loaded = DeepCellStorageIo.load(
-                    associatedStorage,
-                    manager.registries(),
+            var decoded = CellContentsCodec.decode(
+                    associated,
+                    serverContext.registries(),
                     deepCell.getKeyType()
             );
             DeepCellStackData.updatePreview(
                     stack,
-                    DeepCellStorageIo.createPreview(loaded.amounts())
+                    CellContentsCodec.preview(decoded.contents())
             );
         }
         player.addItem(stack);
@@ -148,8 +148,8 @@ public final class Ae2ObjectsCommand {
         return 1;
     }
 
-    private static Item resolveRecoveredItem(DeepCellStorage storage) {
-        return storage.cellItemId()
+    private static Item resolveRecoveredItem(CellRecord record) {
+        return record.cellItemId()
                 .map(Identifier::tryParse)
                 .map(BuiltInRegistries.ITEM::getValue)
                 .filter(item -> item instanceof DeepCellItem)

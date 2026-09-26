@@ -8,10 +8,10 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
-import top.likoslupus.ae2objects.cell.persistence.DeepStorageAccess;
 import top.likoslupus.ae2objects.command.Ae2ObjectsCommand;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Bootstrap;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Integration;
+import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
 
@@ -47,11 +47,11 @@ public final class Ae2Objects {
     }
 
     private void onServerStarted(ServerStartedEvent event) {
-        DeepStorageAccess.onServerStarted(event.getServer());
+        ServerCellContext.onServerStarted(event.getServer());
     }
 
     private void onServerStopped(ServerStoppedEvent event) {
-        DeepStorageAccess.onServerStopped(event.getServer());
+        ServerCellContext.onServerStopped(event.getServer());
     }
 
     public static Identifier id(String path) {

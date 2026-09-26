@@ -27,7 +27,7 @@ import top.likoslupus.ae2objects.cell.DeepCellItem;
 import top.likoslupus.ae2objects.cell.DeepCellStackData;
 import top.likoslupus.ae2objects.cell.inventory.DeepCellInventory;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
-import top.likoslupus.ae2objects.cell.persistence.DeepStorageAccess;
+import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 
 import java.util.ArrayList;
@@ -67,7 +67,10 @@ public final class DeepStorageCellItem extends Item implements DeepCellItem, AET
         this.familyTranslationKey = familyTranslationKey;
     }
 
-    private static Properties properties(ResourceKey<Item> id, CellDefinition definition) {
+    private static Properties properties(
+            ResourceKey<Item> id,
+            CellDefinition definition
+    ) {
         var properties = new Properties()
                 .setId(id)
                 .stacksTo(1)
@@ -163,9 +166,9 @@ public final class DeepStorageCellItem extends Item implements DeepCellItem, AET
         }
 
         var cellId = DeepCellStackData.cellId(stack);
-        var storageManager = DeepStorageAccess.getOrNull();
-        if (cellId != null && storageManager != null) {
-            storageManager.removeCell(cellId);
+        var context = ServerCellContext.getOrNull();
+        if (cellId != null && context != null) {
+            context.repository().remove(cellId);
         }
 
         playerInventory.setItem(playerInventory.getSelectedSlot(), ItemStack.EMPTY);
