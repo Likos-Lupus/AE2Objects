@@ -1,9 +1,13 @@
 package top.likoslupus.ae2objects.integration.ae2;
 
+import appeng.api.implementations.items.IAEItemPowerStorage;
 import appeng.api.storage.StorageCells;
 import appeng.api.upgrades.Upgrades;
 import appeng.core.definitions.AEItems;
+import appeng.items.tools.powered.powersink.PoweredItemCapabilities;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import top.likoslupus.ae2objects.cell.inventory.DeepCellHandler;
 import top.likoslupus.ae2objects.cell.model.CellUpgradeProfile;
 import top.likoslupus.ae2objects.registry.RegisteredCells;
@@ -42,21 +46,53 @@ public final class Ae2Integration {
                                         definition.translationKey()
                                 );
                             }
+                            if (profile.voidOverflow()) {
+                                Upgrades.add(
+                                        AEItems.VOID_CARD,
+                                        item,
+                                        1,
+                                        definition.translationKey()
+                                );
+                            }
+                            if (profile.maxEnergyCards() > 0) {
+                                Upgrades.add(
+                                        AEItems.ENERGY_CARD,
+                                        item,
+                                        profile.maxEnergyCards(),
+                                        definition.translationKey()
+                                );
+                            }
                         })
         );
     }
 
     public static void initClient() {
         RegisteredCells.entries()
-                .forEach(entry -> {
-                    var definition = entry.getKey();
-                    if (definition.isDrive()) {
-                        registerModel(
-                                entry.getValue().get(),
-                                definition.driveModelId()
-                        );
-                    }
-                });
+                .forEach(entry -> registerModel(
+                        entry.getValue().get(),
+                        entry.getKey().inDriveModelId()
+                ));
+    }
+
+    /**
+     * Exposes deep portable cells to other mods' energy chargers through the NeoForge energy
+     * capability, mirroring AE2's {@code InitCapabilityProviders.initPoweredItem}.
+     */
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        RegisteredCells.entries().forEach(entry -> {
+            var item = entry.getValue().get();
+            if (item instanceof IAEItemPowerStorage powerStorage) {
+                event.registerItem(
+                        Capabilities.Energy.ITEM,
+                        (stack, itemAccess) -> new PoweredItemCapabilities(
+                                itemAccess,
+                                item,
+                                powerStorage
+                        ),
+                        item
+                );
+            }
+        });
     }
 
 }

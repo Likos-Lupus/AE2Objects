@@ -136,7 +136,7 @@ public record CellDefinition(
 
     public Identifier itemId();        // deep_<type>_storage_cell_<tier>
 
-    // deep_portable_<type>_storage_cell_<tier>
+    // deep_portable_<type>_cell_<tier>
     public Identifier driveModelId();  // block/drive/cells/<itemId>  (DRIVE only)
 
     public String translationKey();    // text.ae2objects.deep_<type>_storage_cells
@@ -174,14 +174,14 @@ NeoForge items.
 
 `CellUpgradeProfile` (from `docs/content.md` §6):
 
-| Type     | Form     | Fuzzy | Inverter | Energy | Slots |
-|----------|----------|------:|---------:|-------:|------:|
-| Item     | Drive    |     1 |        1 |      0 |     2 |
-| Fluid    | Drive    |     0 |        1 |      0 |     1 |
-| Chemical | Drive    |     0 |        1 |      0 |     1 |
-| Item     | Portable |     1 |        1 |     ≤4 |     4 |
-| Fluid    | Portable |     0 |        1 |     ≤4 |     3 |
-| Chemical | Portable |     0 |        1 |     ≤4 |     3 |
+| Type     | Form     | Fuzzy | Inverter | Void | Energy | Slots |
+|----------|----------|------:|---------:|-----:|-------:|------:|
+| Item     | Drive    |     1 |        1 |    1 |      0 |     3 |
+| Fluid    | Drive    |     0 |        1 |    1 |      0 |     2 |
+| Chemical | Drive    |     0 |        1 |    1 |      0 |     2 |
+| Item     | Portable |     1 |        1 |    1 |     ≤4 |     4 |
+| Fluid    | Portable |     0 |        1 |    1 |     ≤4 |     3 |
+| Chemical | Portable |     0 |        1 |    1 |     ≤4 |     3 |
 
 ---
 
@@ -490,7 +490,7 @@ next persist.
 - **Persistence** — legacy decode, `cell_item` decode, wrong-key-type repair, duplicate merge,
   invalid key drop, amount-mismatch repair, empty cleanup, clone independent UUID.
 - **Optional integration** — AE2-only, +MEGA, +AppMek, +both (activation/registration only).
-- **Portable** — capacity/drain parity with Drive, battery value, charge rate, energy-card
+- **Portable** — half tier capacity, fixed 1 AE/t drain, battery value, charge rate, energy-card
   multiplier, menu per type, default colour, energy-safe disassembly.
 
 ---

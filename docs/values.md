@@ -80,8 +80,8 @@ Insertion is clamped to `remainingAmount`; there is no per-type byte overhead.
 
 ## 5. Portable cell values
 
-Portable deep cells use the **same** byte capacity and idle drain as their non-portable
-counterparts. Additional runtime values:
+Portable deep cells store **half** the tier's byte capacity (like vanilla AE2 portable cells) and
+have a fixed idle drain of **1 AE/t**. Additional runtime values:
 
 | Property          | Value                                          |
 |-------------------|------------------------------------------------|

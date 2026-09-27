@@ -22,15 +22,18 @@ public final class DeepCellFilter {
     private final IPartitionList partitionList;
     private final IncludeExclude mode;
     private final boolean fuzzy;
+    private final boolean voidOverflow;
 
     private DeepCellFilter(
             IPartitionList partitionList,
             IncludeExclude mode,
-            boolean fuzzy
+            boolean fuzzy,
+            boolean voidOverflow
     ) {
         this.partitionList = partitionList;
         this.mode = mode;
         this.fuzzy = fuzzy;
+        this.voidOverflow = voidOverflow;
     }
 
     public static DeepCellFilter create(
@@ -45,6 +48,8 @@ public final class DeepCellFilter {
         var fuzzy = supportsFuzzy
                 && upgrades != null
                 && upgrades.isInstalled(AEItems.FUZZY_CARD);
+        var voidOverflow = upgrades != null
+                && upgrades.isInstalled(AEItems.VOID_CARD);
 
         if (fuzzy) {
             builder.fuzzyMode(fuzzyMode);
@@ -58,7 +63,8 @@ public final class DeepCellFilter {
                 hasInverter
                         ? IncludeExclude.BLACKLIST
                         : IncludeExclude.WHITELIST,
-                fuzzy && partitionList instanceof FuzzyPriorityList
+                fuzzy && partitionList instanceof FuzzyPriorityList,
+                voidOverflow
         );
     }
 
@@ -76,6 +82,10 @@ public final class DeepCellFilter {
 
     public boolean isFuzzy() {
         return fuzzy;
+    }
+
+    public boolean voidOverflow() {
+        return voidOverflow;
     }
 
 }

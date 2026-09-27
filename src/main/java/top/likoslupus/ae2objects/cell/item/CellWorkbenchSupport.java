@@ -2,6 +2,7 @@ package top.likoslupus.ae2objects.cell.item;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.upgrades.IUpgradeInventory;
+import appeng.api.upgrades.ItemUpgradesChanged;
 import appeng.api.upgrades.UpgradeInventories;
 import appeng.items.contents.CellConfig;
 import appeng.util.ConfigInventory;
@@ -13,6 +14,7 @@ import top.likoslupus.ae2objects.cell.storage.DeepCellFilter;
 import top.likoslupus.ae2objects.registry.ModDataComponents;
 
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Shared workbench bridge for drive and portable deep cells.
@@ -53,10 +55,7 @@ public final class CellWorkbenchSupport {
     }
 
     public static IUpgradeInventory upgrades(ItemStack stack, CellDefinition definition) {
-        return UpgradeInventories.forItem(
-                stack,
-                CellUpgradeProfile.forDefinition(definition).totalSlots()
-        );
+        return upgrades(stack, definition, null);
     }
 
     public static FuzzyMode fuzzyMode(ItemStack stack, CellDefinition definition) {
@@ -67,6 +66,17 @@ public final class CellWorkbenchSupport {
                         FuzzyMode.IGNORE_ALL
                 )
                 : FuzzyMode.IGNORE_ALL;
+    }
+
+    public static IUpgradeInventory upgrades(
+            ItemStack stack,
+            CellDefinition definition,
+            @Nullable ItemUpgradesChanged onChanged
+    ) {
+        var slots = CellUpgradeProfile.forDefinition(definition).totalSlots();
+        return onChanged == null
+                ? UpgradeInventories.forItem(stack, slots)
+                : UpgradeInventories.forItem(stack, slots, onChanged);
     }
 
 }

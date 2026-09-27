@@ -26,7 +26,7 @@ public final class CellView {
 
     public static CellCapacity capacity(CellDefinition definition) {
         return new CellCapacity(
-                definition.tier().bytes(),
+                definition.storageBytes(),
                 definition.type().amountPerByte()
         );
     }

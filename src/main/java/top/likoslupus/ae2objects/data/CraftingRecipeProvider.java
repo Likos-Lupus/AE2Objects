@@ -7,8 +7,10 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.Tags;
+import top.likoslupus.ae2objects.cell.model.CellDefinition;
 import top.likoslupus.ae2objects.registry.CellComponentSources;
 import top.likoslupus.ae2objects.registry.RegisteredCells;
 import top.likoslupus.ae2objects.registry.RegisteredHousings;
@@ -27,6 +29,7 @@ public final class CraftingRecipeProvider extends RecipeProvider {
     @Override
     protected void buildRecipes() {
         storageCellRecipes();
+        portableCellRecipes();
         housingRecipes();
     }
 
@@ -38,9 +41,7 @@ public final class CraftingRecipeProvider extends RecipeProvider {
             }
 
             var cell = entry.getValue().get();
-            var component = BuiltInRegistries.ITEM
-                    .getOptional(CellComponentSources.forTier(definition.tier()).itemId())
-                    .orElse(Items.AIR);
+            var component = componentOf(definition);
             var housing = RegisteredHousings.require(definition.type()).get();
 
             shaped(RecipeCategory.MISC, cell)
@@ -66,6 +67,28 @@ public final class CraftingRecipeProvider extends RecipeProvider {
         });
     }
 
+    private void portableCellRecipes() {
+        RegisteredCells.entries().forEach(entry -> {
+            var definition = entry.getKey();
+            if (!definition.isPortable()) {
+                return;
+            }
+
+            var cell = entry.getValue().get();
+            var component = componentOf(definition);
+            var housing = RegisteredHousings.require(definition.type()).get();
+
+            shapeless(RecipeCategory.MISC, cell)
+                    .requires(AEBlocks.ME_CHEST)
+                    .requires(component)
+                    .requires(AEBlocks.ENERGY_CELL)
+                    .requires(housing)
+                    .unlockedBy("has_housing", has(housing))
+                    .unlockedBy("has_component", has(component))
+                    .save(output);
+        });
+    }
+
     private void housingRecipes() {
         RegisteredHousings.all().forEach(housing ->
                 shaped(RecipeCategory.MISC, housing)
@@ -79,6 +102,12 @@ public final class CraftingRecipeProvider extends RecipeProvider {
                         .unlockedBy("has_netherite", has(Tags.Items.INGOTS_NETHERITE))
                         .save(output)
         );
+    }
+
+    private static Item componentOf(CellDefinition definition) {
+        return BuiltInRegistries.ITEM
+                .getOptional(CellComponentSources.forTier(definition.tier()).itemId())
+                .orElse(Items.AIR);
     }
 
     public static final class Runner extends RecipeProvider.Runner {

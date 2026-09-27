@@ -79,31 +79,31 @@ rejected on insert.
 ## 3. Portable storage cells
 
 Portable cells act like a pocket ME Chest and can be charged. They use the ID pattern
-`deep_portable_<type>_storage_cell_<tier>`. 30 cells total.
+`deep_portable_<type>_cell_<tier>`. 30 cells total.
 
 | Type     | ID pattern                                   |
 |----------|----------------------------------------------|
-| Item     | `deep_portable_item_storage_cell_<tier>`     |
-| Fluid    | `deep_portable_fluid_storage_cell_<tier>`    |
-| Chemical | `deep_portable_chemical_storage_cell_<tier>` |
+| Item     | `deep_portable_item_cell_<tier>`     |
+| Fluid    | `deep_portable_fluid_cell_<tier>`    |
+| Chemical | `deep_portable_chemical_cell_<tier>` |
 
 Each family contains the same ten tiers `1k … 256m`, e.g.:
 
 ```
-deep_portable_item_storage_cell_1k      … deep_portable_item_storage_cell_256m
-deep_portable_fluid_storage_cell_1k     … deep_portable_fluid_storage_cell_256m
-deep_portable_chemical_storage_cell_1k  … deep_portable_chemical_storage_cell_256m
+deep_portable_item_cell_1k      … deep_portable_item_cell_256m
+deep_portable_fluid_cell_1k     … deep_portable_fluid_cell_256m
+deep_portable_chemical_cell_1k  … deep_portable_chemical_cell_256m
 ```
 
-Portable cells have the **same byte capacity** as their non-portable counterparts (unlike vanilla
-AE2, whose portable cells have half the bytes and reduced type counts; deep cells have no type limit
-either way).
+Portable cells store **half** of their tier's byte capacity, mirroring vanilla AE2 portable cells,
+and have a flat idle drain of **1 AE/t** (drive cells instead scale their drain with the tier). They
+still have **no type limit**.
 
 ## 4. ID / naming scheme
 
 ```
 deep_<type>_storage_cell_<tier>            non-portable
-deep_portable_<type>_storage_cell_<tier>   portable
+deep_portable_<type>_cell_<tier>   portable
 deep_<type>_cell_housing                   housing
 ```
 
@@ -124,18 +124,19 @@ All content is added to AE2's main creative tab (`AECreativeTabIds.MAIN`):
 
 Upgrades are added through AE2's `Upgrades.add(...)`. "Max" is the number of upgrade slots.
 
-| Cell family             | Fuzzy Card | Inverter Card | Energy Card   | Max slots |
-|-------------------------|------------|---------------|---------------|-----------|
-| Item (non-portable)     | yes (1)    | yes (1)       | —             | 2         |
-| Fluid (non-portable)    | **no**     | yes (1)       | —             | 1         |
-| Chemical (non-portable) | **no**     | yes (1)       | —             | 1         |
-| Portable item           | yes (1)    | yes (1)       | yes (up to 4) | 4         |
-| Portable fluid          | **no**     | yes (1)       | yes (up to 4) | 3         |
-| Portable chemical       | **no**     | yes (1)       | yes (up to 4) | 3         |
+| Cell family             | Fuzzy Card | Inverter Card | Overflow Card | Energy Card   | Max slots |
+|-------------------------|------------|---------------|---------------|---------------|-----------|
+| Item (non-portable)     | yes (1)    | yes (1)       | yes (1)       | —             | 3         |
+| Fluid (non-portable)    | **no**     | yes (1)       | yes (1)       | —             | 2         |
+| Chemical (non-portable) | **no**     | yes (1)       | yes (1)       | —             | 2         |
+| Portable item           | yes (1)    | yes (1)       | yes (1)       | yes (up to 4) | 4         |
+| Portable fluid          | **no**     | yes (1)       | yes (1)       | yes (up to 4) | 3         |
+| Portable chemical       | **no**     | yes (1)       | yes (1)       | yes (up to 4) | 3         |
 
 Rationale: AE2's own fluid cells do not accept the Fuzzy Card, so deep fluid/chemical cells follow
-suit. Because deep cells have no type limit, Equal Distribution / Overflow Destruction cards are not
-part of the base design.
+suit. Because deep cells have **no type limit**, the Equal Distribution Card does not apply (AE2
+divides capacity by the type count), but the Overflow Destruction Card still does — overflow beyond
+the byte capacity is destroyed.
 
 ## 7. Behavior
 
@@ -154,7 +155,8 @@ Shift-right-click with the cell in hand while it is empty disassembles it, retur
 - the housing,
 - any installed upgrade cards.
 
-Portable cells consume their stored energy safely and return the energy cell.
+Portable cells consume their stored energy safely and return the energy cell with any remaining
+charge transferred into it.
 
 ### 7.3 Cloning
 

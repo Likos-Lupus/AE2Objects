@@ -1,6 +1,8 @@
 package top.likoslupus.ae2objects;
 
+import appeng.api.config.Actionable;
 import appeng.api.ids.AECreativeTabIds;
+import appeng.api.implementations.items.IAEItemPowerStorage;
 import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -31,6 +33,7 @@ public final class Ae2Objects {
         ModDataComponents.register(modEventBus);
 
         modEventBus.addListener(Ae2Integration::initCommon);
+        modEventBus.addListener(Ae2Integration::registerCapabilities);
         modEventBus.addListener(this::addContentsToCreativeTab);
 
         NeoForge.EVENT_BUS.addListener(Ae2ObjectsCommand::register);
@@ -44,7 +47,21 @@ public final class Ae2Objects {
         }
 
         RegisteredHousings.all().forEach(event::accept);
-        RegisteredCells.entries().forEach(entry -> event.accept(entry.getValue()));
+        RegisteredCells.entries().forEach(entry -> {
+            var item = entry.getValue().get();
+            event.accept(item);
+
+            // Powered cells (portables) also get a fully-charged creative variant, like AE2.
+            if (item instanceof IAEItemPowerStorage powerStorage) {
+                var charged = item.getDefaultInstance();
+                powerStorage.injectAEPower(
+                        charged,
+                        powerStorage.getAEMaxPower(charged),
+                        Actionable.MODULATE
+                );
+                event.accept(charged);
+            }
+        });
     }
 
     private void onServerStarted(ServerStartedEvent event) {

@@ -34,4 +34,10 @@ public final class CellRegistrationPlan {
                 && (CellTier.ae2Tiers().contains(definition.tier()) || integrations.megaCells());
     }
 
+    public static List<CellDefinition> activePortableCells(IntegrationSet integrations) {
+        return DeepCellCatalog.PORTABLE_CELLS.stream()
+                .filter(definition -> isActive(definition, integrations))
+                .toList();
+    }
+
 }

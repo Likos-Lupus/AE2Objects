@@ -48,7 +48,7 @@ public final class DeepCellInventory implements StorageCell {
         this.definition = definition;
         this.channel = channel;
         this.capacity = new CellCapacity(
-                definition.tier().bytes(),
+                definition.storageBytes(),
                 definition.type().amountPerByte()
         );
         this.container = saveProvider;
@@ -96,7 +96,7 @@ public final class DeepCellInventory implements StorageCell {
 
     @Override
     public double getIdleDrain() {
-        return definition.tier().idleDrain();
+        return definition.idleDrain();
     }
 
     @Override
@@ -147,6 +147,13 @@ public final class DeepCellInventory implements StorageCell {
             contents().insert(what, accepted);
             saveChanges();
         }
+
+        // Overflow Destruction: report the whole request as handled; the excess is destroyed.
+        // If nothing could be stored there is no space at all, so nothing is voided.
+        if (filter.voidOverflow() && accepted > 0) {
+            return amount;
+        }
+
         return accepted;
     }
 

@@ -9,6 +9,7 @@ package top.likoslupus.ae2objects.cell.model;
 public record CellUpgradeProfile(
         boolean fuzzy,
         boolean inverter,
+        boolean voidOverflow,
         int maxEnergyCards,
         int totalSlots
 ) {
@@ -30,13 +31,13 @@ public record CellUpgradeProfile(
             var slots = type == CellContentType.ITEM
                     ? 4
                     : 3;
-            return new CellUpgradeProfile(fuzzy, true, 4, slots);
+            return new CellUpgradeProfile(fuzzy, true, true, 4, slots);
         }
 
         var slots = type == CellContentType.ITEM
-                ? 2
-                : 1;
-        return new CellUpgradeProfile(fuzzy, true, 0, slots);
+                ? 3
+                : 2;
+        return new CellUpgradeProfile(fuzzy, true, true, 0, slots);
     }
 
 }
