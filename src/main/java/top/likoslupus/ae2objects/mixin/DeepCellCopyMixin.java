@@ -13,7 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import top.likoslupus.ae2objects.cell.DeepCellItem;
+import top.likoslupus.ae2objects.cell.item.CellCloneService;
+import top.likoslupus.ae2objects.cell.item.DeepCellDefinitionProvider;
 
 @Mixin(AbstractContainerMenu.class)
 public abstract class DeepCellCopyMixin {
@@ -49,8 +50,8 @@ public abstract class DeepCellCopyMixin {
         }
 
         var stack = slots.get(slotIndex).getItem();
-        if (stack.getItem() instanceof DeepCellItem deepCell) {
-            setCarried(deepCell.copyWithIndependentStorage(stack));
+        if (stack.getItem() instanceof DeepCellDefinitionProvider) {
+            setCarried(CellCloneService.copyIndependent(stack));
             callback.cancel();
         }
     }

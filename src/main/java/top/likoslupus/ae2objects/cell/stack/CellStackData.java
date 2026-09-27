@@ -1,5 +1,6 @@
-package top.likoslupus.ae2objects.cell;
+package top.likoslupus.ae2objects.cell.stack;
 
+import appeng.api.config.FuzzyMode;
 import appeng.api.ids.AEComponents;
 import appeng.api.stacks.GenericStack;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,10 +13,23 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Centralizes the ItemStack data-component contract for deep cells.
+ *
+ * <p>This is the only class that knows the legacy component ids; everything else reads a
+ * {@link CellStackSnapshot} or asks this class to publish one.</p>
  */
-public final class DeepCellStackData {
+public final class CellStackData {
 
-    private DeepCellStackData() {
+    private CellStackData() {
+    }
+
+    public static CellStackSnapshot snapshot(ItemStack stack) {
+        return new CellStackSnapshot(
+                cellId(stack),
+                storedAmount(stack),
+                storedTypes(stack),
+                preview(stack),
+                fuzzyMode(stack)
+        );
     }
 
     public static @Nullable UUID cellId(ItemStack stack) {
@@ -28,6 +42,17 @@ public final class DeepCellStackData {
 
     public static int storedTypes(ItemStack stack) {
         return stack.getOrDefault(Ae2ObjectsDataComponents.STORED_TYPE_COUNT.get(), 0);
+    }
+
+    public static List<GenericStack> preview(ItemStack stack) {
+        return stack.getOrDefault(AEComponents.STORAGE_CELL_INV, List.of());
+    }
+
+    public static FuzzyMode fuzzyMode(ItemStack stack) {
+        return stack.getOrDefault(
+                Ae2ObjectsDataComponents.FUZZY_MODE.get(),
+                FuzzyMode.IGNORE_ALL
+        );
     }
 
     public static void updatePreview(ItemStack stack, List<GenericStack> preview) {
@@ -44,7 +69,11 @@ public final class DeepCellStackData {
         stack.remove(AEComponents.STORAGE_CELL_INV);
     }
 
-    public static void updateSummary(ItemStack stack, long storedAmount, int storedTypes) {
+    public static void updateSummary(
+            ItemStack stack,
+            long storedAmount,
+            int storedTypes
+    ) {
         stack.set(Ae2ObjectsDataComponents.STORED_AMOUNT.get(), storedAmount);
         stack.set(Ae2ObjectsDataComponents.STORED_TYPE_COUNT.get(), storedTypes);
     }

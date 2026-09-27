@@ -9,8 +9,11 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import top.likoslupus.ae2objects.Ae2Objects;
-import top.likoslupus.ae2objects.cell.item.DeepStorageCellItem;
-import top.likoslupus.ae2objects.cell.model.*;
+import top.likoslupus.ae2objects.cell.item.DeepDriveCellItem;
+import top.likoslupus.ae2objects.cell.model.CellContentType;
+import top.likoslupus.ae2objects.cell.model.CellDefinition;
+import top.likoslupus.ae2objects.cell.model.CellTier;
+import top.likoslupus.ae2objects.cell.model.DeepCellCatalog;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -72,15 +75,13 @@ public final class Ae2ObjectsItems {
             Supplier<? extends ItemLike> coreItem,
             Supplier<? extends ItemLike> housingItem
     ) {
-        var upgradeSlots = CellUpgradeProfile.forDefinition(definition).totalSlots();
         var item = ITEMS.register(
                 definition.itemId(),
-                key -> new DeepStorageCellItem(
+                key -> new DeepDriveCellItem(
                         ResourceKey.create(Registries.ITEM, key),
                         coreItem,
                         housingItem,
                         definition,
-                        upgradeSlots,
                         definition.translationKey()
                 )
         );

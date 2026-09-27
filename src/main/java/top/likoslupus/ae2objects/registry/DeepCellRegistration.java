@@ -3,7 +3,7 @@ package top.likoslupus.ae2objects.registry;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.ItemLike;
 import net.neoforged.neoforge.registries.DeferredItem;
-import top.likoslupus.ae2objects.cell.item.DeepStorageCellItem;
+import top.likoslupus.ae2objects.cell.item.DeepDriveCellItem;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
 
 import java.util.function.Supplier;
@@ -13,7 +13,7 @@ import java.util.function.Supplier;
  */
 public record DeepCellRegistration(
         CellDefinition definition,
-        DeferredItem<DeepStorageCellItem> item,
+        DeferredItem<DeepDriveCellItem> item,
         Supplier<? extends ItemLike> coreItem,
         Supplier<? extends ItemLike> housingItem
 ) {

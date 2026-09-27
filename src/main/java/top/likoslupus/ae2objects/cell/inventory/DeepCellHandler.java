@@ -3,7 +3,7 @@ package top.likoslupus.ae2objects.cell.inventory;
 import appeng.api.storage.cells.ICellHandler;
 import appeng.api.storage.cells.ISaveProvider;
 import net.minecraft.world.item.ItemStack;
-import top.likoslupus.ae2objects.cell.DeepCellItem;
+import top.likoslupus.ae2objects.cell.item.DeepCellDefinitionProvider;
 import top.likoslupus.ae2objects.cell.storage.DeepCellInventoryFactory;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
 
@@ -19,7 +19,7 @@ public final class DeepCellHandler implements ICellHandler {
 
     @Override
     public boolean isCell(ItemStack stack) {
-        return stack.getItem() instanceof DeepCellItem;
+        return stack.getItem() instanceof DeepCellDefinitionProvider;
     }
 
     @Override

@@ -8,12 +8,12 @@ import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.cells.CellState;
 import appeng.api.storage.cells.ISaveProvider;
 import appeng.api.storage.cells.StorageCell;
-import appeng.api.upgrades.IUpgradeInventory;
-import appeng.util.ConfigInventory;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import top.likoslupus.ae2objects.cell.DeepCellItem;
+import top.likoslupus.ae2objects.cell.channel.StorageChannelBinding;
+import top.likoslupus.ae2objects.cell.item.DeepCellDefinitionProvider;
 import top.likoslupus.ae2objects.cell.model.CellCapacity;
+import top.likoslupus.ae2objects.cell.model.CellDefinition;
 import top.likoslupus.ae2objects.cell.storage.DeepCellContents;
 import top.likoslupus.ae2objects.cell.storage.DeepCellFilter;
 import top.likoslupus.ae2objects.cell.storage.DeepCellSession;
@@ -26,55 +26,43 @@ import org.jspecify.annotations.Nullable;
 /**
  * Pure AE2 {@link StorageCell} engine for all deep-cell key types.
  *
- * <p>Owns acceptance, filtering, capacity clamping and the {@code StorageCell} contract only.
- * Loaded contents and persistence live in {@link DeepCellSession}; partition/fuzzy behaviour lives
- * in {@link DeepCellFilter}; nested-cell rules live in {@link NestedCellPolicy}. The engine must
- * not branch on item/fluid/chemical or drive/portable.</p>
+ * <p>Owns acceptance, filtering, capacity clamping and the {@code StorageCell} contract only. It
+ * holds no item implementation and must not branch on item/fluid/chemical or drive/portable.</p>
  */
 public final class DeepCellInventory implements StorageCell {
 
-    private final DeepCellItem cellItem;
+    private final CellDefinition definition;
+    private final StorageChannelBinding channel;
     private final CellCapacity capacity;
-    private final ItemStack stack;
     private final @Nullable ISaveProvider container;
     private final DeepCellSession session;
     private final DeepCellFilter filter;
 
     public DeepCellInventory(
-            DeepCellItem cellItem,
-            ItemStack stack,
+            CellDefinition definition,
+            StorageChannelBinding channel,
             @Nullable ISaveProvider saveProvider,
             DeepCellSession session,
             DeepCellFilter filter
     ) {
-        this.cellItem = cellItem;
-        this.capacity = cellItem.capacity();
-        this.stack = stack;
+        this.definition = definition;
+        this.channel = channel;
+        this.capacity = new CellCapacity(
+                definition.tier().bytes(),
+                definition.type().amountPerByte()
+        );
         this.container = saveProvider;
         this.session = session;
         this.filter = filter;
     }
 
     public static boolean hasCellUUID(ItemStack cell) {
-        return cell.getItem() instanceof DeepCellItem
+        return cell.getItem() instanceof DeepCellDefinitionProvider
                 && cell.has(Ae2ObjectsDataComponents.CELL_ID.get());
-    }
-
-    private static boolean isCellEmpty(@Nullable DeepCellInventory inventory) {
-        return inventory == null
-                || inventory.getAvailableStacks().isEmpty();
     }
 
     public @Nullable UUID getCellUUID() {
         return session.cellId();
-    }
-
-    public @Nullable IUpgradeInventory getUpgradesInventory() {
-        return cellItem.getUpgrades(stack);
-    }
-
-    public ConfigInventory getConfigInventory() {
-        return cellItem.getConfigInventory(stack);
     }
 
     public IncludeExclude getPartitionListMode() {
@@ -108,7 +96,7 @@ public final class DeepCellInventory implements StorageCell {
 
     @Override
     public double getIdleDrain() {
-        return cellItem.getIdleDrain();
+        return definition.tier().idleDrain();
     }
 
     @Override
@@ -138,14 +126,9 @@ public final class DeepCellInventory implements StorageCell {
     }
 
     @Override
-    public long insert(
-            AEKey what,
-            long amount,
-            Actionable mode,
-            IActionSource source
-    ) {
+    public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
         if (amount <= 0
-                || !cellItem.channel().accepts(what)
+                || !channel.accepts(what)
                 || !filter.accepts(what)
                 || !NestedCellPolicy.accepts(what)
         ) {

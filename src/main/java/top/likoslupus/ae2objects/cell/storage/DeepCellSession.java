@@ -2,11 +2,11 @@ package top.likoslupus.ae2objects.cell.storage;
 
 import appeng.api.stacks.AEKeyType;
 import net.minecraft.world.item.ItemStack;
-import top.likoslupus.ae2objects.cell.DeepCellStackData;
 import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
 import top.likoslupus.ae2objects.cell.persistence.CellContentsCodec;
 import top.likoslupus.ae2objects.cell.persistence.CellRecord;
+import top.likoslupus.ae2objects.cell.stack.CellStackData;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 
@@ -59,16 +59,16 @@ public final class DeepCellSession {
     }
 
     public @Nullable UUID cellId() {
-        return DeepCellStackData.cellId(stack);
+        return CellStackData.cellId(stack);
     }
 
     /** Cached summary stored on the item; cheap and always available, even on the client. */
     public long knownStoredAmount() {
-        return DeepCellStackData.storedAmount(stack);
+        return CellStackData.storedAmount(stack);
     }
 
     public int knownStoredTypes() {
-        return DeepCellStackData.storedTypes(stack);
+        return CellStackData.storedTypes(stack);
     }
 
     public long storedAmount() {
@@ -140,15 +140,15 @@ public final class DeepCellSession {
         var record = CellContentsCodec.encode(
                 current,
                 context.registries(),
-                DeepCellStackData.registeredItemId(stack)
+                CellStackData.registeredItemId(stack)
         );
         context.repository().put(id, record);
-        DeepCellStackData.updateSummary(
+        CellStackData.updateSummary(
                 stack,
                 current.totalAmount(),
                 current.typeCount()
         );
-        DeepCellStackData.updatePreview(
+        CellStackData.updatePreview(
                 stack,
                 CellContentsCodec.preview(current)
         );
@@ -160,7 +160,7 @@ public final class DeepCellSession {
         if (id != null && context != null) {
             context.repository().remove(id);
         }
-        DeepCellStackData.clearStorageIdentity(stack);
+        CellStackData.clearStorageIdentity(stack);
         contents = new DeepCellContents();
         dirty = false;
     }
@@ -180,7 +180,7 @@ public final class DeepCellSession {
         stack.set(Ae2ObjectsDataComponents.CELL_ID.get(), id);
         context.repository().put(
                 id,
-                CellRecord.empty(DeepCellStackData.registeredItemId(stack))
+                CellRecord.empty(CellStackData.registeredItemId(stack))
         );
     }
 

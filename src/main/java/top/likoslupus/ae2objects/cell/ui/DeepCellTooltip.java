@@ -1,8 +1,8 @@
-package top.likoslupus.ae2objects.cell.inventory;
+package top.likoslupus.ae2objects.cell.ui;
 
 import appeng.api.config.IncludeExclude;
+import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
-import appeng.api.stacks.KeyCounter;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.Tooltips;
@@ -11,50 +11,72 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
-import top.likoslupus.ae2objects.cell.storage.DeepCellInventoryFactory;
+import top.likoslupus.ae2objects.cell.item.CellWorkbenchSupport;
+import top.likoslupus.ae2objects.cell.item.DeepCellDefinitionProvider;
+import top.likoslupus.ae2objects.cell.model.CellDefinition;
+import top.likoslupus.ae2objects.cell.stack.CellStackData;
+import top.likoslupus.ae2objects.cell.stack.CellView;
 
 import java.util.*;
 import java.util.stream.IntStream;
+import org.jspecify.annotations.Nullable;
 
-/** Client-safe tooltip projection based only on synchronized ItemStack metadata. */
+/**
+ * Client-safe tooltip projection.
+ *
+ * <p>Reads only the {@link top.likoslupus.ae2objects.cell.stack.CellStackSnapshot} and the
+ * workbench state; it never creates a storage inventory or touches the repository.</p>
+ */
 public final class DeepCellTooltip {
 
     private DeepCellTooltip() {
     }
 
     public static void addCellInformation(ItemStack stack, List<Component> lines) {
-        var inventory = DeepCellInventoryFactory.create(stack, null, null);
-        if (inventory == null) {
+        var definition = definitionOf(stack);
+        if (definition == null) {
             return;
         }
 
-        var uuid = inventory.getCellUUID();
+        var snapshot = CellStackData.snapshot(stack);
+        var capacity = CellView.capacity(definition);
+
+        var uuid = snapshot.id();
         if (uuid != null) {
             lines.add(Component.literal("Cell UUID: ")
                     .withStyle(ChatFormatting.GRAY)
                     .append(Component.literal(uuid.toString()).withStyle(ChatFormatting.AQUA)));
         }
 
-        lines.add(Tooltips.bytesUsed(inventory.getCachedUsedBytes(), inventory.getTotalBytes()));
-        lines.add(typesUsedInfinite(inventory.getCachedStoredTypes()));
+        lines.add(Tooltips.bytesUsed(
+                capacity.usedBytes(snapshot.storedAmount()),
+                capacity.bytes()
+        ));
+        lines.add(typesUsedInfinite(snapshot.storedTypes()));
 
-        if (!inventory.isPreformatted()) {
+        var filter = CellWorkbenchSupport.filter(stack, definition);
+        if (!filter.isPreformatted()) {
             return;
         }
 
         var mode = (
-                inventory.getPartitionListMode() == IncludeExclude.WHITELIST
+                filter.mode() == IncludeExclude.WHITELIST
                         ? GuiText.Included
                         : GuiText.Excluded
         ).text();
-
-        var precision = inventory.isFuzzy()
+        var precision = filter.isFuzzy()
                 ? GuiText.Fuzzy.text()
                 : GuiText.Precise.text();
         lines.add(GuiText.Partitioned.withSuffix(" - ")
                 .append(mode)
                 .append(" ")
                 .append(precision));
+    }
+
+    private static @Nullable CellDefinition definitionOf(ItemStack stack) {
+        return stack.getItem() instanceof DeepCellDefinitionProvider provider
+                ? provider.definition()
+                : null;
     }
 
     private static Component typesUsedInfinite(long types) {
@@ -70,48 +92,42 @@ public final class DeepCellTooltip {
     }
 
     public static Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
-        var inventory = DeepCellInventoryFactory.create(
-                stack,
-                null,
-                null
-        );
-        if (inventory == null) {
+        var definition = definitionOf(stack);
+        if (definition == null) {
             return Optional.empty();
         }
 
+        var snapshot = CellStackData.snapshot(stack);
         var upgradeStacks = new ArrayList<ItemStack>();
         if (AEConfig.instance().isTooltipShowCellUpgrades()) {
-            var upgrades = inventory.getUpgradesInventory();
-            if (upgrades != null) {
-                upgrades.forEach(upgradeStacks::add);
-            }
+            CellWorkbenchSupport.upgrades(stack, definition).forEach(upgradeStacks::add);
         }
 
         var content = new ArrayList<GenericStack>();
         var hasMoreContent = false;
         if (AEConfig.instance().isTooltipShowCellContent()) {
             var maxShown = AEConfig.instance().getTooltipMaxCellContentShown();
-            var availableStacks = new KeyCounter();
-            inventory.getAvailableStacks(availableStacks);
-            availableStacks.forEach(entry ->
-                    content.add(new GenericStack(entry.getKey(), entry.getLongValue()))
-            );
 
+            content.addAll(snapshot.preview());
+
+            var present = new HashSet<AEKey>();
+            snapshot.preview().forEach(entry -> present.add(entry.what()));
+
+            var filter = CellWorkbenchSupport.filter(stack, definition);
             if (content.size() < maxShown
-                    && inventory.getPartitionListMode() == IncludeExclude.WHITELIST
+                    && filter.mode() == IncludeExclude.WHITELIST
             ) {
-                var config = inventory.getConfigInventory();
+                var config = CellWorkbenchSupport.config(stack, definition);
                 IntStream.range(0, config.size())
                         .mapToObj(config::getKey)
                         .filter(Objects::nonNull)
-                        .filter(key -> availableStacks.get(key) <= 0)
+                        .filter(key -> !present.contains(key))
                         .map(key -> new GenericStack(key, 0))
                         .forEach(content::add);
             }
 
             content.sort(Comparator.comparingLong(GenericStack::amount).reversed());
-            hasMoreContent =
-                    inventory.getCachedStoredTypes() > maxShown || content.size() > maxShown;
+            hasMoreContent = snapshot.storedTypes() > maxShown || content.size() > maxShown;
             if (content.size() > maxShown) {
                 content.subList(maxShown, content.size()).clear();
             }
@@ -119,9 +135,7 @@ public final class DeepCellTooltip {
 
         return Optional.of(new StorageCellTooltipComponent(
                 upgradeStacks,
-                AEConfig.instance().isTooltipShowCellContent()
-                        ? content
-                        : Collections.emptyList(),
+                content,
                 hasMoreContent,
                 true
         ));

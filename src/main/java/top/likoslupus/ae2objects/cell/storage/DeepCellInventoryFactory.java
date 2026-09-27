@@ -2,8 +2,10 @@ package top.likoslupus.ae2objects.cell.storage;
 
 import appeng.api.storage.cells.ISaveProvider;
 import net.minecraft.world.item.ItemStack;
-import top.likoslupus.ae2objects.cell.DeepCellItem;
+import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
 import top.likoslupus.ae2objects.cell.inventory.DeepCellInventory;
+import top.likoslupus.ae2objects.cell.item.CellWorkbenchSupport;
+import top.likoslupus.ae2objects.cell.item.DeepCellDefinitionProvider;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
 
 import org.jspecify.annotations.Nullable;
@@ -29,29 +31,16 @@ public final class DeepCellInventoryFactory {
     ) {
         requireNonNull(stack, "Cannot create cell inventory for null ItemStack");
 
-        if (!(stack.getItem() instanceof DeepCellItem cellItem)
-                || !cellItem.isStorageCell(stack)
-        ) {
+        if (!(stack.getItem() instanceof DeepCellDefinitionProvider provider)) {
             return null;
         }
 
-        var upgrades = cellItem.getUpgrades(stack);
-        var config = cellItem.getConfigInventory(stack);
-        var filter = DeepCellFilter.create(
-                config,
-                upgrades,
-                cellItem.getFuzzyMode(stack),
-                cellItem.supportsFuzzy()
-        );
-        var session = new DeepCellSession(stack, cellItem.definition(), context);
+        var definition = provider.definition();
+        var channel = StorageChannelRegistry.INSTANCE.require(definition.type());
+        var filter = CellWorkbenchSupport.filter(stack, definition);
+        var session = new DeepCellSession(stack, definition, context);
 
-        return new DeepCellInventory(
-                cellItem,
-                stack,
-                saveProvider,
-                session,
-                filter
-        );
+        return new DeepCellInventory(definition, channel, saveProvider, session, filter);
     }
 
 }

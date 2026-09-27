@@ -15,11 +15,12 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import top.likoslupus.ae2objects.Ae2Objects;
-import top.likoslupus.ae2objects.cell.DeepCellItem;
-import top.likoslupus.ae2objects.cell.DeepCellStackData;
+import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
+import top.likoslupus.ae2objects.cell.item.DeepCellDefinitionProvider;
 import top.likoslupus.ae2objects.cell.model.CellTier;
 import top.likoslupus.ae2objects.cell.persistence.CellContentsCodec;
 import top.likoslupus.ae2objects.cell.persistence.CellRecord;
+import top.likoslupus.ae2objects.cell.stack.CellStackData;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
@@ -92,18 +93,18 @@ public final class Ae2ObjectsCommand {
         }
 
         stack.set(Ae2ObjectsDataComponents.CELL_ID.get(), uuid);
-        DeepCellStackData.updateSummary(
+        CellStackData.updateSummary(
                 stack,
                 associated.storedAmount(),
                 associated.storedTypesCount()
         );
-        if (recoveredItem instanceof DeepCellItem deepCell) {
+        if (recoveredItem instanceof DeepCellDefinitionProvider provider) {
             var decoded = CellContentsCodec.decode(
                     associated,
                     serverContext.registries(),
-                    deepCell.getKeyType()
+                    StorageChannelRegistry.INSTANCE.require(provider.definition().type()).keyType()
             );
-            DeepCellStackData.updatePreview(
+            CellStackData.updatePreview(
                     stack,
                     CellContentsCodec.preview(decoded.contents())
             );
@@ -125,14 +126,14 @@ public final class Ae2ObjectsCommand {
             CommandContext<CommandSourceStack> context
     ) throws CommandSyntaxException {
         var stack = context.getSource().getPlayerOrException().getMainHandItem();
-        if (!(stack.getItem() instanceof DeepCellItem)) {
+        if (!(stack.getItem() instanceof DeepCellDefinitionProvider)) {
             context.getSource().sendFailure(
                     Component.translatable("command.ae2objects.getuuid_fail_notcell")
             );
             return 0;
         }
 
-        var cellId = DeepCellStackData.cellId(stack);
+        var cellId = CellStackData.cellId(stack);
         if (cellId == null) {
             context.getSource().sendFailure(
                     Component.translatable("command.ae2objects.getuuid_fail_nouuid")
@@ -152,7 +153,7 @@ public final class Ae2ObjectsCommand {
         return record.cellItemId()
                 .map(Identifier::tryParse)
                 .map(BuiltInRegistries.ITEM::getValue)
-                .filter(item -> item instanceof DeepCellItem)
+                .filter(item -> item instanceof DeepCellDefinitionProvider)
                 .orElseGet(() -> Ae2ObjectsItems.itemStorageCell(CellTier.K256).item().get());
     }
 
