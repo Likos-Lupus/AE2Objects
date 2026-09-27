@@ -11,6 +11,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.Tags;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
+import top.likoslupus.ae2objects.cell.model.CellTier;
 import top.likoslupus.ae2objects.registry.CellComponentSources;
 import top.likoslupus.ae2objects.registry.RegisteredCells;
 import top.likoslupus.ae2objects.registry.RegisteredHousings;
@@ -36,7 +37,10 @@ public final class CraftingRecipeProvider extends RecipeProvider {
     private void storageCellRecipes() {
         RegisteredCells.entries().forEach(entry -> {
             var definition = entry.getKey();
-            if (!definition.isDrive()) {
+            if (!definition.isDrive()
+                    || CellTier.megaTiers().contains(definition.tier())
+            ) {
+                // MEGA-tier recipes are emitted by MegaRecipeProvider (conditional on the MEGA mod).
                 return;
             }
 
@@ -70,7 +74,9 @@ public final class CraftingRecipeProvider extends RecipeProvider {
     private void portableCellRecipes() {
         RegisteredCells.entries().forEach(entry -> {
             var definition = entry.getKey();
-            if (!definition.isPortable()) {
+            if (!definition.isPortable()
+                    || CellTier.megaTiers().contains(definition.tier())
+            ) {
                 return;
             }
 

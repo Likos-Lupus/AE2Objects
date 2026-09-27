@@ -11,6 +11,7 @@ import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import top.likoslupus.ae2objects.Ae2Objects;
 import top.likoslupus.ae2objects.cell.channel.PortableMenuRegistry;
+import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
 import top.likoslupus.ae2objects.cell.item.DeepDriveCellItem;
 import top.likoslupus.ae2objects.cell.item.DeepPortableCellItem;
 import top.likoslupus.ae2objects.cell.model.CellContentType;
@@ -43,6 +44,19 @@ public final class ModItems {
                     .stacksTo(64)
                     .fireResistant())
     );
+
+    /**
+     * Chemical housing. Always registered as an item so its model is valid, but only exposed (tab,
+     * recipes) once the Applied Mekanistics chemical channel exists.
+     */
+    public static final DeferredItem<Item> DEEP_CHEMICAL_CELL_HOUSING = ITEMS.register(
+            "deep_chemical_cell_housing",
+            key -> new Item(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, key))
+                    .stacksTo(64)
+                    .fireResistant())
+    );
+
     /** Default dye tint of portable cells (matches AE2's portable-cell colour). */
     private static final int PORTABLE_DEFAULT_COLOR = 0x80CAFF;
 
@@ -52,6 +66,9 @@ public final class ModItems {
     public static void defineContent(IntegrationSet integrations) {
         RegisteredHousings.put(CellContentType.ITEM, DEEP_ITEM_CELL_HOUSING);
         RegisteredHousings.put(CellContentType.FLUID, DEEP_FLUID_CELL_HOUSING);
+        if (StorageChannelRegistry.INSTANCE.isAvailable(CellContentType.CHEMICAL)) {
+            RegisteredHousings.put(CellContentType.CHEMICAL, DEEP_CHEMICAL_CELL_HOUSING);
+        }
         CellRegistrationPlan.activeDriveCells(integrations).forEach(ModItems::registerDriveCell);
         CellRegistrationPlan.activePortableCells(integrations)
                 .forEach(ModItems::registerPortableCell);

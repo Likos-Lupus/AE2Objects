@@ -40,6 +40,13 @@ byte counts intentionally do not. See the appendix in [`values.md`](values.md).
 MEGA-tier deep cells are always **registered** (stable IDs) but only **craftable** when MEGA Cells is
 loaded, because the recipes reference `megacells:cell_component_*`.
 
+**Status (26.1.2).** MEGA Cells has no 26.1.2 release yet, so this integration is implemented
+id-only: the MEGA-tier recipes are emitted as raw, condition-gated JSON by `MegaRecipeProvider`
+(the recipe builders cannot be used while `megacells:*` is absent from the classpath), and the
+MEGA-tier item/drive models are placeholders that reuse the `256k` art. **TODO:** switch to
+builder-based recipes and real MEGA-tier models once MEGA Cells ships a 26.1 build, then verify
+in-game.
+
 ## 3. Applied Mekanistics (optional)
 
 [Applied Mekanistics](https://github.com/ramidzkh/Applied-Mekanistics) (appmek) exposes Mekanism
@@ -54,13 +61,21 @@ chemicals over AE2 via `me.ramidzkh.mekae2`. AE2Objects adds deep chemical cells
 | Content validator | `mekanism.api.chemical.attribute.ChemicalAttributeValidator.DEFAULT` |
 | Deep chemical housing | `ae2objects:deep_chemical_cell_housing` |
 
+**Status (26.1.2).** Applied Mekanistics has no 26.1 build yet (latest `1.6.3`, NeoForge 1.21.1), so
+only the integration **skeleton** is in place: `integration/appmek/AppMekIntegration` reserves the
+seam (gated by mod id), placeholder chemical resources exist, and `CellRegistrationPlan` activates
+chemical content only once the chemical channel is registered. **TODO:** once appmek ships a 26.1
+build, resolve `MekanismKeyType.TYPE`, register the chemical `StorageChannelBinding` and
+`appmek:portable_chemical_cell`, enforce the radioactive check, emit chemical recipes, and replace
+the placeholder models.
+
 Reference appmek item IDs (used for recipes / interop):
 
 | appmek item | ID |
 | --- | --- |
 | Chemical housing | `appmek:chemical_cell_housing` |
 | Chemical cells | `appmek:chemical_storage_cell_1k` … `_256k` |
-| Portable chemical cells | `appmek:portable_chemical_storage_cell_1k` … `_256k` |
+| Portable chemical cells | `appmek:portable_chemical_cell_1k` … `_256k` |
 | Creative chemical cell | `appmek:creative_chemical_cell` |
 | Chemical P2P tunnel | `appmek:chemical_p2p_tunnel` |
 

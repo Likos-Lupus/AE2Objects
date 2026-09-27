@@ -13,6 +13,7 @@ import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import top.likoslupus.ae2objects.command.Ae2ObjectsCommand;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Bootstrap;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Integration;
+import top.likoslupus.ae2objects.integration.appmek.AppMekIntegration;
 import top.likoslupus.ae2objects.platform.IntegrationSet;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.ModDataComponents;
@@ -28,7 +29,10 @@ public final class Ae2Objects {
     public Ae2Objects(IEventBus modEventBus) {
         Ae2Bootstrap.bootstrapRequired();
 
-        ModItems.defineContent(IntegrationSet.detect());
+        var integrations = IntegrationSet.detect();
+        AppMekIntegration.bootstrapRequired(integrations);
+
+        ModItems.defineContent(integrations);
         ModItems.register(modEventBus);
         ModDataComponents.register(modEventBus);
 

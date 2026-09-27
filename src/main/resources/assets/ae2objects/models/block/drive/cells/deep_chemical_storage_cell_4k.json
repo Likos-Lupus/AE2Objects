@@ -1,0 +1,7 @@
+{
+  "parent": "ae2:block/drive_4k_fluid_cell",
+  "textures": {
+    "particle": "ae2objects:block/drive/drive_cells",
+    "cell": "ae2objects:block/drive/drive_cells"
+  }
+}

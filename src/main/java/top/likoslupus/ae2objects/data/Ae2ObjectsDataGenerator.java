@@ -12,6 +12,7 @@ public class Ae2ObjectsDataGenerator {
     @SubscribeEvent
     public static void onGatherData(GatherDataEvent.Server event) {
         event.createProvider(CraftingRecipeProvider.Runner::new);
+        event.createProvider(MegaRecipeProvider::new);
     }
 
 }

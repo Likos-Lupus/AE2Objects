@@ -36,3 +36,30 @@ type = "required"
 versionRange = "[26.1.10-beta, 26.2.0)"
 ordering = "AFTER"
 side = "BOTH"
+
+# Optional MEGA Cells integration: only enables the 1m-256m recipes (component source + conditional
+# recipes). No MEGA Java API is used.
+# TODO: tighten the version range once a MEGA Cells 26.1 release exists.
+[[dependencies.ae2objects]]
+modId = "megacells"
+type = "optional"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+# Optional Applied Mekanistics (Mekanism chemicals) integration. Skeleton only: the chemical
+# channel and recipes are deferred until an appmek 26.1 build exists.
+# TODO: register ChemicalChannelBinding + appmek:portable_chemical_cell, then enable chemical recipes.
+[[dependencies.ae2objects]]
+modId = "appmek"
+type = "optional"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.ae2objects]]
+modId = "mekanism"
+type = "optional"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"

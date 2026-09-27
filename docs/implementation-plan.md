@@ -476,7 +476,7 @@ next persist.
 | 9  | `feat(megacells): 1m–256m tiers`                     | enable item/fluid MEGA tiers; conditional recipes                                                                                                | engine untouched              |
 | 10 | `feat(gametest): world-level tests`                  | GameTest harness + cases (§17)                                                                                                                   | gametests pass                |
 | 11 | `docs: rewrite architecture & refactor plan`         | rewrite docs, update map, note chemical pending appmek                                                                                           | —                             |
-| —  | deferred                                             | `integration/appmek` chemistry + compileOnly deps                                                                                                | when appmek 26.1.2 exists     |
+| —  | deferred                                             | `integration/appmek` chemistry (skeleton landed: `AppMekIntegration` seam + gating + placeholder resources; channel/recipes TODO) | when appmek 26.1 exists     |
 
 ---
 
