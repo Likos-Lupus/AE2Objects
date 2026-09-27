@@ -10,7 +10,6 @@ import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.Tags;
 import top.likoslupus.ae2objects.registry.CellComponentSources;
-import top.likoslupus.ae2objects.registry.ModItems;
 import top.likoslupus.ae2objects.registry.RegisteredCells;
 import top.likoslupus.ae2objects.registry.RegisteredHousings;
 
@@ -28,7 +27,7 @@ public final class CraftingRecipeProvider extends RecipeProvider {
     @Override
     protected void buildRecipes() {
         storageCellRecipes();
-        itemHousingRecipe();
+        housingRecipes();
     }
 
     private void storageCellRecipes() {
@@ -67,17 +66,19 @@ public final class CraftingRecipeProvider extends RecipeProvider {
         });
     }
 
-    private void itemHousingRecipe() {
-        shaped(RecipeCategory.MISC, ModItems.DEEP_ITEM_CELL_HOUSING)
-                .pattern("aba")
-                .pattern("b b")
-                .pattern("ded")
-                .define('a', AEBlocks.QUARTZ_GLASS)
-                .define('b', Tags.Items.DUSTS_REDSTONE)
-                .define('d', Tags.Items.INGOTS_NETHERITE)
-                .define('e', Tags.Items.GEMS_AMETHYST)
-                .unlockedBy("has_netherite", has(Tags.Items.INGOTS_NETHERITE))
-                .save(output);
+    private void housingRecipes() {
+        RegisteredHousings.all().forEach(housing ->
+                shaped(RecipeCategory.MISC, housing)
+                        .pattern("aba")
+                        .pattern("b b")
+                        .pattern("ded")
+                        .define('a', AEBlocks.QUARTZ_GLASS)
+                        .define('b', Tags.Items.DUSTS_REDSTONE)
+                        .define('d', Tags.Items.INGOTS_NETHERITE)
+                        .define('e', Tags.Items.GEMS_AMETHYST)
+                        .unlockedBy("has_netherite", has(Tags.Items.INGOTS_NETHERITE))
+                        .save(output)
+        );
     }
 
     public static final class Runner extends RecipeProvider.Runner {

@@ -18,10 +18,9 @@ import top.likoslupus.ae2objects.platform.IntegrationSet;
  * Content registration and catalog.
  *
  * <p>Storage-cell families are registered from
- * {@link top.likoslupus.ae2objects.cell.model.DeepCellCatalog} definitions so tier
- * additions do not need parallel field/list/model/update edits. Optional integrations can use the
- * same registration method during mod construction while keeping their foreign API references
- * isolated.</p>
+ * {@link top.likoslupus.ae2objects.cell.model.DeepCellCatalog} definitions so tier additions do not
+ * need parallel field/list/model/update edits. Optional integrations can use the same registration
+ * method during mod construction while keeping their foreign API references isolated.</p>
  */
 public final class ModItems {
 
@@ -36,11 +35,20 @@ public final class ModItems {
                     .fireResistant())
     );
 
+    public static final DeferredItem<Item> DEEP_FLUID_CELL_HOUSING = ITEMS.register(
+            "deep_fluid_cell_housing",
+            key -> new Item(new Item.Properties()
+                    .setId(ResourceKey.create(Registries.ITEM, key))
+                    .stacksTo(64)
+                    .fireResistant())
+    );
+
     private ModItems() {
     }
 
     public static void defineContent(IntegrationSet integrations) {
         RegisteredHousings.put(CellContentType.ITEM, DEEP_ITEM_CELL_HOUSING);
+        RegisteredHousings.put(CellContentType.FLUID, DEEP_FLUID_CELL_HOUSING);
         CellRegistrationPlan.activeDriveCells(integrations).forEach(ModItems::registerDriveCell);
     }
 

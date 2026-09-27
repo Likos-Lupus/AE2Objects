@@ -29,7 +29,8 @@ public final class CellRegistrationPlan {
             CellDefinition definition,
             IntegrationSet integrations
     ) {
-        return definition.type() == CellContentType.ITEM
+        // Chemical content is activated by the Applied Mekanistics integration.
+        return definition.type() != CellContentType.CHEMICAL
                 && (CellTier.ae2Tiers().contains(definition.tier()) || integrations.megaCells());
     }
 
