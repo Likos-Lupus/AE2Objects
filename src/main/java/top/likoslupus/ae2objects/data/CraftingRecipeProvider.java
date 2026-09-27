@@ -2,12 +2,17 @@ package top.likoslupus.ae2objects.data;
 
 import appeng.core.definitions.AEBlocks;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.Tags;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
+import top.likoslupus.ae2objects.registry.CellComponentSources;
+import top.likoslupus.ae2objects.registry.ModItems;
+import top.likoslupus.ae2objects.registry.RegisteredCells;
+import top.likoslupus.ae2objects.registry.RegisteredHousings;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -27,10 +32,18 @@ public final class CraftingRecipeProvider extends RecipeProvider {
     }
 
     private void storageCellRecipes() {
-        Ae2ObjectsItems.storageCells().forEach(registration -> {
-            var cell = registration.item().get();
-            var component = registration.coreItem().get();
-            var housing = registration.housingItem().get();
+        RegisteredCells.entries().forEach(entry -> {
+            var definition = entry.getKey();
+            if (!definition.isDrive()) {
+                return;
+            }
+
+            var cell = entry.getValue().get();
+            var component = BuiltInRegistries.ITEM
+                    .getOptional(CellComponentSources.forTier(definition.tier()).itemId())
+                    .orElse(Items.AIR);
+            var housing = RegisteredHousings.require(definition.type()).get();
+
             shaped(RecipeCategory.MISC, cell)
                     .pattern("aba")
                     .pattern("bcb")
@@ -49,13 +62,13 @@ public final class CraftingRecipeProvider extends RecipeProvider {
                     .unlockedBy("has_component", has(component))
                     .save(
                             output,
-                            registration.item().getId().withSuffix("_with_housing").toString()
+                            definition.id().withSuffix("_with_housing").toString()
                     );
         });
     }
 
     private void itemHousingRecipe() {
-        shaped(RecipeCategory.MISC, Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING)
+        shaped(RecipeCategory.MISC, ModItems.DEEP_ITEM_CELL_HOUSING)
                 .pattern("aba")
                 .pattern("b b")
                 .pattern("ded")

@@ -18,7 +18,7 @@ import top.likoslupus.ae2objects.cell.storage.DeepCellContents;
 import top.likoslupus.ae2objects.cell.storage.DeepCellFilter;
 import top.likoslupus.ae2objects.cell.storage.DeepCellSession;
 import top.likoslupus.ae2objects.cell.storage.NestedCellPolicy;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
+import top.likoslupus.ae2objects.registry.ModDataComponents;
 
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
@@ -58,7 +58,7 @@ public final class DeepCellInventory implements StorageCell {
 
     public static boolean hasCellUUID(ItemStack cell) {
         return cell.getItem() instanceof DeepCellDefinitionProvider
-                && cell.has(Ae2ObjectsDataComponents.CELL_ID.get());
+                && cell.has(ModDataComponents.CELL_ID.get());
     }
 
     public @Nullable UUID getCellUUID() {

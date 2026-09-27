@@ -10,7 +10,7 @@ import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
 import top.likoslupus.ae2objects.cell.model.CellUpgradeProfile;
 import top.likoslupus.ae2objects.cell.storage.DeepCellFilter;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
+import top.likoslupus.ae2objects.registry.ModDataComponents;
 
 import java.util.Set;
 
@@ -31,7 +31,7 @@ public final class CellWorkbenchSupport {
             FuzzyMode mode
     ) {
         if (definition.type().supportsFuzzy()) {
-            stack.set(Ae2ObjectsDataComponents.FUZZY_MODE.get(), mode);
+            stack.set(ModDataComponents.FUZZY_MODE.get(), mode);
         }
     }
 
@@ -63,7 +63,7 @@ public final class CellWorkbenchSupport {
         return definition.type().supportsFuzzy()
                 ?
                 stack.getOrDefault(
-                        Ae2ObjectsDataComponents.FUZZY_MODE.get(),
+                        ModDataComponents.FUZZY_MODE.get(),
                         FuzzyMode.IGNORE_ALL
                 )
                 : FuzzyMode.IGNORE_ALL;

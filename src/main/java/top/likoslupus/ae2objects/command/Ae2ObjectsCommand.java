@@ -17,13 +17,16 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import top.likoslupus.ae2objects.Ae2Objects;
 import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
 import top.likoslupus.ae2objects.cell.item.DeepCellDefinitionProvider;
+import top.likoslupus.ae2objects.cell.model.CellContentType;
+import top.likoslupus.ae2objects.cell.model.CellDefinition;
+import top.likoslupus.ae2objects.cell.model.CellForm;
 import top.likoslupus.ae2objects.cell.model.CellTier;
 import top.likoslupus.ae2objects.cell.persistence.CellContentsCodec;
 import top.likoslupus.ae2objects.cell.persistence.CellRecord;
 import top.likoslupus.ae2objects.cell.stack.CellStackData;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
+import top.likoslupus.ae2objects.registry.ModDataComponents;
+import top.likoslupus.ae2objects.registry.RegisteredCells;
 
 import java.util.UUID;
 
@@ -92,7 +95,7 @@ public final class Ae2ObjectsCommand {
             serverContext.repository().put(uuid, associated);
         }
 
-        stack.set(Ae2ObjectsDataComponents.CELL_ID.get(), uuid);
+        stack.set(ModDataComponents.CELL_ID.get(), uuid);
         CellStackData.updateSummary(
                 stack,
                 associated.storedAmount(),
@@ -154,7 +157,15 @@ public final class Ae2ObjectsCommand {
                 .map(Identifier::tryParse)
                 .map(BuiltInRegistries.ITEM::getValue)
                 .filter(item -> item instanceof DeepCellDefinitionProvider)
-                .orElseGet(() -> Ae2ObjectsItems.itemStorageCell(CellTier.K256).item().get());
+                .orElseGet(() ->
+                        RegisteredCells.require(
+                                new CellDefinition(
+                                        CellContentType.ITEM,
+                                        CellTier.K256,
+                                        CellForm.DRIVE
+                                )
+                        ).get()
+                );
     }
 
     private static Component copyToClipboard(String value) {

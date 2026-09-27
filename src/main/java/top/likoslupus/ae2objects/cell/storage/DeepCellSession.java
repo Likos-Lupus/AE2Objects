@@ -8,7 +8,7 @@ import top.likoslupus.ae2objects.cell.persistence.CellContentsCodec;
 import top.likoslupus.ae2objects.cell.persistence.CellRecord;
 import top.likoslupus.ae2objects.cell.stack.CellStackData;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
+import top.likoslupus.ae2objects.registry.ModDataComponents;
 
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
@@ -177,7 +177,7 @@ public final class DeepCellSession {
         }
 
         var id = UUID.randomUUID();
-        stack.set(Ae2ObjectsDataComponents.CELL_ID.get(), id);
+        stack.set(ModDataComponents.CELL_ID.get(), id);
         context.repository().put(
                 id,
                 CellRecord.empty(CellStackData.registeredItemId(stack))

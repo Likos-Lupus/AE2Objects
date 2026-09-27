@@ -6,7 +6,7 @@ import top.likoslupus.ae2objects.cell.persistence.CellContentsCodec;
 import top.likoslupus.ae2objects.cell.persistence.CellRecord;
 import top.likoslupus.ae2objects.cell.stack.CellStackData;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
+import top.likoslupus.ae2objects.registry.ModDataComponents;
 
 import java.util.UUID;
 
@@ -43,7 +43,7 @@ public final class CellCloneService {
                 .withCellItemIdIfMissing(itemId);
 
         context.repository().put(newCellId, record);
-        copy.set(Ae2ObjectsDataComponents.CELL_ID.get(), newCellId);
+        copy.set(ModDataComponents.CELL_ID.get(), newCellId);
         CellStackData.updateSummary(
                 copy,
                 record.storedAmount(),

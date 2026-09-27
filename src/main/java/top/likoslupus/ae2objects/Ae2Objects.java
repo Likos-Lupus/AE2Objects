@@ -11,9 +11,12 @@ import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import top.likoslupus.ae2objects.command.Ae2ObjectsCommand;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Bootstrap;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Integration;
+import top.likoslupus.ae2objects.platform.IntegrationSet;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
+import top.likoslupus.ae2objects.registry.ModDataComponents;
+import top.likoslupus.ae2objects.registry.ModItems;
+import top.likoslupus.ae2objects.registry.RegisteredCells;
+import top.likoslupus.ae2objects.registry.RegisteredHousings;
 
 @Mod(Ae2Objects.MOD_ID)
 public final class Ae2Objects {
@@ -23,8 +26,9 @@ public final class Ae2Objects {
     public Ae2Objects(IEventBus modEventBus) {
         Ae2Bootstrap.bootstrapRequired();
 
-        Ae2ObjectsItems.register(modEventBus);
-        Ae2ObjectsDataComponents.register(modEventBus);
+        ModItems.defineContent(IntegrationSet.detect());
+        ModItems.register(modEventBus);
+        ModDataComponents.register(modEventBus);
 
         modEventBus.addListener(Ae2Integration::initCommon);
         modEventBus.addListener(this::addContentsToCreativeTab);
@@ -39,11 +43,8 @@ public final class Ae2Objects {
             return;
         }
 
-        event.accept(Ae2ObjectsItems.DEEP_ITEM_CELL_HOUSING);
-        Ae2ObjectsItems.storageCells()
-                .forEach(registration ->
-                        event.accept(registration.item().get())
-                );
+        RegisteredHousings.all().forEach(event::accept);
+        RegisteredCells.entries().forEach(entry -> event.accept(entry.getValue()));
     }
 
     private void onServerStarted(ServerStartedEvent event) {

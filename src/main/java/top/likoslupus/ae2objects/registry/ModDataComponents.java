@@ -13,7 +13,7 @@ import top.likoslupus.ae2objects.Ae2Objects;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public final class Ae2ObjectsDataComponents {
+public final class ModDataComponents {
 
     public static final DeferredRegister.DataComponents COMPONENTS = DeferredRegister
             .createDataComponents(Registries.DATA_COMPONENT_TYPE, Ae2Objects.MOD_ID);
@@ -50,7 +50,7 @@ public final class Ae2ObjectsDataComponents {
                     .networkSynchronized(FuzzyMode.STREAM_CODEC)
     );
 
-    private Ae2ObjectsDataComponents() {
+    private ModDataComponents() {
     }
 
     public static void register(IEventBus eventBus) {

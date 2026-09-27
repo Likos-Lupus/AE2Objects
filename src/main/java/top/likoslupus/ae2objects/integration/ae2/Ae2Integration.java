@@ -5,7 +5,8 @@ import appeng.api.upgrades.Upgrades;
 import appeng.core.definitions.AEItems;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import top.likoslupus.ae2objects.cell.inventory.DeepCellHandler;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsItems;
+import top.likoslupus.ae2objects.cell.model.CellUpgradeProfile;
+import top.likoslupus.ae2objects.registry.RegisteredCells;
 
 import static appeng.api.client.StorageCellModels.registerModel;
 
@@ -19,34 +20,43 @@ public final class Ae2Integration {
         StorageCells.addCellHandler(DeepCellHandler.INSTANCE);
 
         event.enqueueWork(() ->
-                Ae2ObjectsItems.storageCells()
-                        .forEach(registration -> {
-                            if (registration.definition().type().supportsFuzzy()) {
+                RegisteredCells.entries()
+                        .forEach(entry -> {
+                            var definition = entry.getKey();
+                            var item = entry.getValue().get();
+                            var profile = CellUpgradeProfile.forDefinition(definition);
+
+                            if (profile.fuzzy()) {
                                 Upgrades.add(
                                         AEItems.FUZZY_CARD,
-                                        registration.item().get(),
+                                        item,
                                         1,
-                                        registration.familyTranslationKey()
+                                        definition.translationKey()
                                 );
                             }
-                            Upgrades.add(
-                                    AEItems.INVERTER_CARD,
-                                    registration.item().get(),
-                                    1,
-                                    registration.familyTranslationKey()
-                            );
+                            if (profile.inverter()) {
+                                Upgrades.add(
+                                        AEItems.INVERTER_CARD,
+                                        item,
+                                        1,
+                                        definition.translationKey()
+                                );
+                            }
                         })
         );
     }
 
     public static void initClient() {
-        Ae2ObjectsItems.storageCells()
-                .forEach(registration ->
+        RegisteredCells.entries()
+                .forEach(entry -> {
+                    var definition = entry.getKey();
+                    if (definition.isDrive()) {
                         registerModel(
-                                registration.item().get(),
-                                registration.driveModel()
-                        )
-                );
+                                entry.getValue().get(),
+                                definition.driveModelId()
+                        );
+                    }
+                });
     }
 
 }

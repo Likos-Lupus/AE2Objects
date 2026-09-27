@@ -28,7 +28,7 @@ import top.likoslupus.ae2objects.cell.stack.CellStackData;
 import top.likoslupus.ae2objects.cell.stack.CellView;
 import top.likoslupus.ae2objects.cell.ui.DeepCellTooltip;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
-import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
+import top.likoslupus.ae2objects.registry.ModDataComponents;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -66,12 +66,12 @@ public final class DeepDriveCellItem extends Item
                 .setId(id)
                 .stacksTo(1)
                 .fireResistant()
-                .component(Ae2ObjectsDataComponents.STORED_AMOUNT.get(), 0L)
-                .component(Ae2ObjectsDataComponents.STORED_TYPE_COUNT.get(), 0);
+                .component(ModDataComponents.STORED_AMOUNT.get(), 0L)
+                .component(ModDataComponents.STORED_TYPE_COUNT.get(), 0);
 
         if (definition.type().supportsFuzzy()) {
             properties.component(
-                    Ae2ObjectsDataComponents.FUZZY_MODE.get(),
+                    ModDataComponents.FUZZY_MODE.get(),
                     FuzzyMode.IGNORE_ALL
             );
         }
