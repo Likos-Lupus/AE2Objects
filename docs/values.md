@@ -50,8 +50,8 @@ Rules:
 ## 3. Key-type unit math
 
 The inventory converts between stored **units** (what the AE network moves) and **bytes** (the
-capacity accounting unit) using the deep-cell family's explicit `amountPerByte`. This is intentionally
-not inherited from AE2's basic-cell `AEKeyType#getAmountPerByte()` ratio.
+capacity accounting unit) using the deep-cell family's explicit `amountPerByte`. This is
+intentionally not inherited from AE2's basic-cell `AEKeyType#getAmountPerByte()` ratio.
 
 | Key type               | `amountPerByte` | Unit symbol         | 1 byte stores |
 |------------------------|----------------:|---------------------|---------------|
@@ -59,13 +59,13 @@ not inherited from AE2's basic-cell `AEKeyType#getAmountPerByte()` ratio.
 | `AEKeyType.fluids()`   |            1000 | `B` (mB internally) | 1000 mB       |
 | `MekanismKeyType.TYPE` |            1000 | chemical unit       | 1000 units    |
 
-Formulas implemented by `DeepCellCapacity`:
+Formulas implemented by `CellCapacity`:
 
 ```
-amountPerByte       = cellSpec.amountPerByte()
-usedBytes           = storedAmount / amountPerByte
-freeBytes           = totalBytes - usedBytes
-remainingAmount  = totalBytes * amountPerByte - storedAmount
+amountPerByte    = definition.type().amountPerByte()
+usedBytes        = storedAmount / amountPerByte
+freeBytes        = bytes - usedBytes
+remainingAmount  = bytes * amountPerByte - storedAmount
 ```
 
 Insertion is clamped to `remainingAmount`; there is no per-type byte overhead.
@@ -76,7 +76,8 @@ Insertion is clamped to `remainingAmount`; there is no per-type byte overhead.
   cell: `256,000,000 bytes × 1000 = 256,000,000,000` units (~2.56 × 10¹¹), well within `long`.
 - `getBytes()` returns an `int`. The largest tier, `256m`, is `256,000,000`, within the `int` range
   (~2.147 × 10⁹). Byte arithmetic internally uses `long`.
-- The legacy `cell_item_count` data component and persisted `item_count` field store the native `storedAmount` as `long`.
+- The legacy `cell_item_count` data component and persisted `item_count` field store the native
+  `storedAmount` as `long`.
 
 ## 5. Portable cell values
 

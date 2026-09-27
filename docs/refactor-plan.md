@@ -1,71 +1,89 @@
 # Refactor Plan and Migration Notes
 
-This document records the architectural refactor performed before implementing the expansion in
-`content.md`, `values.md` and `integrations.md`.
+This document records the *Deep Cell Platform* refactor that made AE2Objects able to carry the full
+product matrix, and the compatibility choices that keep existing worlds working. The resulting
+architecture is described in [`architecture.md`](architecture.md).
 
 ## Why the old shape did not scale
 
-The original code was correct for one family of five item cells, but most future variation points
-were implicit:
+The original code was correct for a single family of five item cells, but its variation points were
+implicit:
 
 - tier values were constructor literals in five registry entries;
-- the inventory assumed one stored item == one byte;
+- the inventory assumed **one stored item == one byte**;
 - `DeepCellInventory` mixed filtering, mutation, AE-key NBT codecs, SavedData writes, client preview
-  generation and tooltip-facing state;
-- drive models, upgrades, creative tab entries and recipes maintained separate cell lists;
-- the recovery command always recreated a 256k item cell;
-- package boundaries separated technical class categories rather than the deep-cell domain.
+  generation and tooltip state;
+- drive models, upgrades, creative-tab entries and recipes each kept their own cell list;
+- the recovery command always recreated a `256k` item cell;
+- package boundaries separated technical categories (item/inventory/persistence) rather than the
+  deep-cell domain.
 
-That would turn the documented `3 key types × 10 tiers × normal/portable` matrix into repeated code
-and condition-heavy special cases.
+A first refactor introduced `DeepCellSpec`, which mixed the three independent axes
+(`StorageType × Tier × Runtime API`) into one object, so every tier recreated storage semantics.
 
-## Implemented refactor
+## What the refactor produced
 
-1. **Domain model introduced** — `CellTier`, `DeepCellSpec`, and `DeepCellCapacity` make tier
-   values, key type and native-unit math explicit.
-2. **Feature-oriented packages** — all deep-cell behavior now lives below `cell`, split only at real
-   boundaries (`item`, `inventory`, `persistence`).
-3. **Inventory reduced to an adapter** — AE-key serialization moved to `DeepCellStorageIo`; tooltip
-   rendering moved to `DeepCellTooltip`; stack component access moved to `DeepCellStackData`.
-4. **Immutable persistence snapshots** — `DeepCellStorage` defensively copies mutable NBT/array
-   values; `DeepStorageManager` no longer exposes its mutable map.
-5. **Data-driven shipped content** — the five current cells are generated from the tier list and
-   produce a shared `DeepCellRegistration` catalog consumed by models, upgrades, creative tabs and
-   recipes.
-6. **Future-safe recovery** — SavedData records can carry the source cell registry ID while still
-   decoding legacy records.
-7. **Long-safe storage operations** — insertion is clamped in native units and extraction no longer
-   truncates at `Integer.MAX_VALUE`.
-8. **Optional-integration seam** — validators are functions inside `DeepCellSpec`; optional API
-   types can remain inside their integration packages.
+The refactor split the axes and froze the engine:
+
+```text
+CellDefinition = CellContentType × CellTier × CellForm   (pure data)
+StorageChannelBinding: CellContentType -> AEKeyType        (runtime adapter)
+CellForm adapter:      Drive | Portable                    (interaction/UI/power)
+```
+
+Delivered in phases, each a signed commit:
+
+| Phase | Commit    | Summary                                                                                                                                                                                                                 |
+|-------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0     | `6e8e983` | Checkpoint the pre-existing `cell/` module; fix fastutil usage.                                                                                                                                                         |
+| 0b    | `f4c49c6` | Characterization tests for capacity + persistence.                                                                                                                                                                      |
+| 1     | `6f7f283` | `cell/model`: `CellContentType`, `CellTier`, `CellForm`, `CellDefinition`, `DeepCellCatalog`, `CellCapacity`, `CellUpgradeProfile`.                                                                                     |
+| 2     | `b0a6cf2` | `cell/channel` + Item/Fluid bindings; delete `DeepCellSpec` (definition holds no `AEKeyType`).                                                                                                                          |
+| 3     | `5b11f6f` | `cell/persistence` + `cell/storage` split: contents/session/record/repository/codec/context; legacy decode + `cell_item`.                                                                                               |
+| 4     | `b9458b9` | Rewrite `DeepCellInventory` as a pure `StorageCell`; extract `DeepCellFilter`, `NestedCellPolicy`, `DeepCellInventoryFactory`. **Engine frozen.**                                                                       |
+| 5     | `f0b90ab` | `cell/stack` + `cell/item` + `cell/ui`: client snapshot, workbench support, drive item, tooltip/tint; delete the giant interface.                                                                                       |
+| 6     | `6e8b031` | Catalog-driven registration (`ModItems`, `RegisteredCells`, `RegisteredHousings`, `CellRegistrationPlan`, `CellComponentSources`); rename `Ae2ObjectsItems`→`ModItems`, `Ae2ObjectsDataComponents`→`ModDataComponents`. |
+| 7     | `f1888ff` | Fluid drive cells `1k`–`256k` + `deep_fluid_cell_housing`; texture tooling.                                                                                                                                             |
+| 8     | `77c11cb` | Portable item + fluid cells; half capacity, flat 1 AE/t drain, energy capability, void card; portable IDs drop "storage".                                                                                               |
+| 9     | `652b8c9` | MEGA `1m`–`256m` tiers (always registered, recipes gated on `megacells`) + Applied Mekanistics chemical skeleton.                                                                                                       |
+| 10    | `fb4299a` | NeoForge GameTests (dedicated source set, world-level cases).                                                                                                                                                           |
+
+The hard invariant: after **Phase 4** the storage engine (`DeepCellInventory`, `DeepCellSession`,
+`DeepCellContents`, `DeepCellFilter`, `NestedCellPolicy`, `CellContentsCodec`) is **frozen**. Later
+phases added content without touching it.
 
 ## Compatibility decisions
 
 The refactor intentionally preserves:
 
-- all existing item registry IDs;
-- `ae2objects:storage_manager` SavedData identity;
-- legacy persisted `keys`, `amts`, and `item_count` fields;
-- existing data-component registry IDs, including `cell_item_count`;
-- existing recipe IDs and resource paths for the five shipped cells.
+- registry IDs `ae2objects:deep_item_storage_cell_{1k,4k,16k,64k,256k}` and
+  `ae2objects:deep_item_cell_housing`;
+- SavedData identity `ae2objects:storage_manager`;
+- data-component registry IDs `ae2objects:cell_id`, `ae2objects:cell_item_count`,
+  `ae2objects:cell_type_count`, `ae2objects:fuzzy_mode`;
+- persisted NBT fields `keys`, `amts`, `item_count`, plus the new optional `cell_item`;
+- the AE2 client preview component `ae2:storage_cell_inv` (≤10 entries, amount descending).
 
-`cell_item_count` and persisted `item_count` are now treated semantically as **stored native
-amount** so they also work for fluids and chemicals. Renaming those registry/save keys would require
-a data migration and provides no runtime benefit.
+`cell_item_count` and persisted `item_count` are now semantically the stored **native amount** (not
+just items), so they work for fluids and chemicals without a data migration.
 
-## Expansion order after this refactor
+## Boundary rules that must keep holding
 
-The recommended implementation sequence is:
+- `CellDefinition` references no `AEKeyType`; the core/domain references no appmek/Mekanism.
+- `DeepCellInventory` contains no `ITEM`/`FLUID`/`CHEMICAL`/`DRIVE`/`PORTABLE` branches and no
+  concrete item dependency.
+- Tooltip/tint never construct a `DeepCellInventory`; the client never reaches
+  `SavedDataCellRepository`.
+- All concrete cell identity is expressed by `CellDefinition`; the 60 target cells are all
+  expressible by `DeepCellCatalog`.
+- One implementation each for UUID lifecycle, capacity and the AE-key codec.
 
-1. add vanilla AE2 fluid housing + five `1k`–`256k` normal fluid cells using `DeepCellSpec.fluids`;
-2. add portable item/fluid cell form reusing `DeepCellItem` and `DeepCellInventory`;
-3. add the optional-integration bootstrap and MEGA `1m`–`256m` tier registrations;
-4. add Applied Mekanistics chemical specs/validator/menu entirely under `integration.appmek`;
-5. generate the complete recipe/resource/lang matrix and add conditional recipes for optional
-   component sources;
-6. add GameTests covering drive insertion, partition cards, cloning, recovery and optional-mod
-   absence in addition to the unit tests for capacity/persistence.
+## Deferred work (tracked, not blocking)
 
-At each step the storage engine should remain unchanged. If a feature requires copying
-`DeepCellInventory` or adding a key-type `if/else` inside persistence, that is a signal that the
-integration boundary is being crossed in the wrong direction.
+- **Applied Mekanistics chemistry** — no 26.1 build exists yet, so only the `AppMekIntegration` seam
+  is present (placeholder resources; no chemical recipes). When appmek ships 26.1, register the
+  chemical `StorageChannelBinding` + portable menu, enforce the radioactive attribute check, emit
+  recipes and replace placeholder models. See [`integrations.md`](integrations.md).
+- **MEGA Cells tier art/recipes** — MEGA-tier deep cells are id-only placeholders (recipes are
+  condition-gated raw JSON, models reuse the `256k` art) until MEGA ships a 26.1 build.
+- **In-game verification** with each optional mod once those builds exist.

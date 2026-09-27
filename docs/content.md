@@ -5,8 +5,12 @@ mod is named explicitly.
 
 Tier placeholders used below: `1k`, `4k`, `16k`, `64k`, `256k`, `1m`, `4m`, `16m`, `64m`, `256m`.
 
-- **Shipped so far:** the item deep cells `1k`–`256k` and `deep_item_cell_housing`.
-- **Planned:** all fluid / chemical / MEGA-tier / portable variants listed here.
+- **Shipped:** item + fluid drive cells (`1k`–`256m`), portable item + fluid cells, and all three
+  housings. MEGA-tier cells (`1m`–`256m`) are always registered, but only craftable when MEGA Cells
+  is loaded.
+- **Ready-but-inactive:** chemical cells. They are described here as the target design; at runtime
+  they activate only once the Applied Mekanistics chemical channel exists (no 26.1 appmek build
+  yet).
 
 ## 1. Housings
 
@@ -81,8 +85,8 @@ rejected on insert.
 Portable cells act like a pocket ME Chest and can be charged. They use the ID pattern
 `deep_portable_<type>_cell_<tier>`. 30 cells total.
 
-| Type     | ID pattern                                   |
-|----------|----------------------------------------------|
+| Type     | ID pattern                           |
+|----------|--------------------------------------|
 | Item     | `deep_portable_item_cell_<tier>`     |
 | Fluid    | `deep_portable_fluid_cell_<tier>`    |
 | Chemical | `deep_portable_chemical_cell_<tier>` |

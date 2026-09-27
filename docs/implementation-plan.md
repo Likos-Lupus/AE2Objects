@@ -74,26 +74,36 @@ top.likoslupus.ae2objects
 ├─ cell/
 │  ├─ model/        CellContentType, CellTier, CellForm, CellDefinition, DeepCellCatalog,
 │  │                CellCapacity, CellUpgradeProfile
-│  ├─ channel/      StorageChannelBinding, StorageChannelRegistry, PortableMenuBinding
-│  ├─ storage/      DeepCellInventory, DeepCellInventoryFactory, DeepCellContents,
-│  │                DeepCellSession, DeepCellFilter, NestedCellPolicy
+│  ├─ channel/      StorageChannelBinding, StorageChannelRegistry, PortableMenuBinding,
+│  │                PortableMenuRegistry
+│  ├─ storage/      DeepCellContents, DeepCellSession, DeepCellFilter, NestedCellPolicy,
+│  │                DeepCellInventoryFactory
+│  ├─ inventory/    DeepCellInventory, DeepCellHandler
 │  ├─ persistence/  CellRecord, CellRepository, SavedDataCellRepository, CellContentsCodec
 │  ├─ stack/        CellStackData, CellStackSnapshot, CellView
 │  ├─ item/         DeepCellDefinitionProvider, DeepDriveCellItem, DeepPortableCellItem,
-│  │                CellWorkbenchSupport, CellDisassemblyService
+│  │                CellWorkbenchSupport, CellCloneService
 │  └─ ui/           DeepCellTooltip
-├─ content/         ModItems, ModDataComponents, RegisteredCells, RegisteredHousings,
-│                   CellRegistrationPlan, CellComponentSources
+├─ registry/        ModItems, ModDataComponents, RegisteredCells, RegisteredHousings,
+│                   CellRegistrationPlan, CellComponentSources, CellComponentSource
 ├─ integration/
-│  ├─ ae2/          Ae2Bootstrap, ItemChannelBinding, FluidChannelBinding, PortableMenuRegistry,
-│  │                Ae2CellHandlerRegistration, Ae2UpgradeRegistration, Ae2DriveModelRegistration
-│  ├─ appmek/       AppMekBootstrap (no-op seam this round)
-│  └─ megacells/    MegaCellsRecipeSources
-├─ platform/        IntegrationSet, ServerCellContext
-├─ command/         Ae2ObjectsCommand, CellRecoveryService, CellIdentityService
-├─ data/            Ae2ObjectsDataGenerator, CellRecipeProvider, CellModelProvider
+│  ├─ ae2/          Ae2Bootstrap, ItemChannelBinding, FluidChannelBinding, Ae2Integration
+│  └─ appmek/       AppMekIntegration (no-op seam this round)
+├─ platform/        IntegrationId, IntegrationSet, ServerCellContext
+├─ command/         Ae2ObjectsCommand (recovery/identity inline)
+├─ data/            Ae2ObjectsDataGenerator, CraftingRecipeProvider, MegaRecipeProvider,
+│                   GameTestStructureProvider
+├─ client/          Ae2ObjectsClient
 └─ mixin/           DeepCellCopyMixin
 ```
+
+> **As-built note.** The package is `registry`, not `content`: the proposed rename was skipped to
+> avoid risky file moves. Only content-bearing classes remain in `registry`; there is no separate
+> `integration.megacells` package (MEGA is id-only via `CellComponentSources` +
+> `MegaRecipeProvider`).
+> `CellDisassemblyService`/`CellRecoveryService` were not split out — disassembly and recovery live
+> in the item classes and `Ae2ObjectsCommand` respectively. The dedicated `gametest` source set
+> (dev-only) is not part of the shipped package tree.
 
 ### Dependency rule (hard code-review constraint)
 
@@ -461,6 +471,11 @@ next persist.
 
 ## 15. Work items by phase (commit sequence)
 
+> **Status.** Phases 0–10 are complete and committed; Phase 11 (this documentation pass) is in
+> progress. The commit hashes below are the original plan labels; the as-built hashes and one-line
+> summaries are recorded in [`refactor-plan.md`](refactor-plan.md). Chemical/MEGA in-game
+> verification remains deferred until those mods ship 26.1 builds.
+
 | #  | Commit                                               | Work items                                                                                                                                       | Gate                          |
 |----|------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------|
 | 0  | `refactor: checkpoint deep-cell module`              | Verify current tree, commit as-is                                                                                                                | build + `test` green          |
@@ -476,7 +491,7 @@ next persist.
 | 9  | `feat(megacells): 1m–256m tiers`                     | enable item/fluid MEGA tiers; conditional recipes                                                                                                | engine untouched              |
 | 10 | `feat(gametest): world-level tests`                  | GameTest harness + cases (§17)                                                                                                                   | gametests pass                |
 | 11 | `docs: rewrite architecture & refactor plan`         | rewrite docs, update map, note chemical pending appmek                                                                                           | —                             |
-| —  | deferred                                             | `integration/appmek` chemistry (skeleton landed: `AppMekIntegration` seam + gating + placeholder resources; channel/recipes TODO) | when appmek 26.1 exists     |
+| —  | deferred                                             | `integration/appmek` chemistry (skeleton landed: `AppMekIntegration` seam + gating + placeholder resources; channel/recipes TODO)                | when appmek 26.1 exists       |
 
 ---
 
@@ -516,17 +531,20 @@ next persist.
 
 ---
 
-## 19. Open items to resolve during implementation
+## 19. Open items (resolved)
 
-1. Exact NeoForge conditional-recipe datagen API (`RecipeOutput.withConditions` +
-   `ModLoadedCondition`).
-2. ModDevGradle `gameTestServer` run configuration specifics for this version.
-3. `NestedCellPolicy` semantics vs AE2's own nested-cell rule (prefer
-   `StorageCells.getCellInventory(...)` / `StorageCell.canFitInsideCell()`; deep cells report
-   `canFitInsideCell() == false`).
-4. `AbstractPortableCell` menu resolution: populate `PortableMenuRegistry` (AE2 bindings) **before**
-   portable item registration.
-5. `StorageCellDisassemblyRecipe` datagen shape (`cell` + `cell_disassembly_items`).
+1. **Conditional recipes** — MEGA-tier recipes are emitted as raw condition-gated JSON by
+   `MegaRecipeProvider` (`neoforge:mod_loaded`), not via `RecipeOutput.withConditions`, because the
+   `megacells:*` items are absent from the dev datagen classpath.
+2. **GameTest run** — ModDevGradle exposes a `gameTestServer` run type (main
+   `net.neoforged.fml.startup.GameTestServer`); the Stonecutter `gameTestActive` task and CI wire it
+   up. Tests register via `RegisterGameTestsEvent` + `BuiltInRegistries.TEST_FUNCTION`.
+3. **`NestedCellPolicy`** — implemented with `StorageCells.getCellInventory(...)
+   .canFitInsideCell()`; deep cells report `false` and can never be nested.
+4. **Portable menus** — `Ae2Bootstrap` populates `PortableMenuRegistry` before item registration;
+   item registration requires the menu via `PortableMenuRegistry.require(...)`.
+5. **Portable disassembly** — implemented directly in the item (energy-aware) rather than via
+   `StorageCellDisassemblyRecipe` datagen.
 
 ---
 

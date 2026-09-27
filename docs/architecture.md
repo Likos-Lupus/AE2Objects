@@ -1,326 +1,378 @@
 # Architecture
 
-This document describes the refactored internal architecture of AE2Objects and the extension seams
-reserved for the planned fluid / chemical / MEGA-tier / portable expansion.
+This document describes the internal architecture of AE2Objects after the *Deep Cell Platform*
+refactor: a single storage implementation that carries the full product matrix
+
+```text
+Item / Fluid / Chemical  ×  1k .. 256m  ×  Drive / Portable
+```
+
+It supersedes the pre-refactor architecture (the `DeepCellSpec` design). The historical work items
+live in [`implementation-plan.md`](implementation-plan.md); the *why* is in
+[`refactor-plan.md`](refactor-plan.md).
 
 ## 1. Design goals
 
-The architecture is intentionally centered on the **deep-cell domain**, rather than on technical
-buckets such as `item`, `storage`, and `registry`.
+- **One storage engine** for every AE key type and every form.
+- **No type limit**: capacity depends only on the total native amount vs. the byte capacity.
+- **Three independent axes** that never leak into each other:
+  `CellContentType` (product), `CellTier` (numbers), `CellForm` (interaction/UI).
+- **Optional integrations never leak foreign classes** into shared packages.
+- Registration, models, upgrades, creative tab, recipes and datagen all consume one catalog instead
+  of parallel hard-coded lists.
+- Preserve registry IDs, the SavedData identity and the persisted NBT layout.
 
-Goals:
-
-- one storage implementation for every AE key type;
-- no type limit: capacity is based only on total native amount;
-- a single tier model for the shipped `1k`–`256k` cells and planned `1m`–`256m` cells;
-- normal and portable cells share the same inventory, persistence and cloning semantics;
-- optional integrations never leak foreign classes into shared packages;
-- registration, AE2 model wiring, upgrade wiring, creative-tab population and recipes consume a
-  common registration catalog instead of parallel hard-coded lists;
-- preserve existing registry IDs and existing world SavedData fields.
-
-Non-goals:
-
-- replacing AE2's storage framework;
-- making MEGA Cells or Applied Mekanistics required dependencies;
-- redesigning AE2's own partition/upgrades/menu behavior.
+Non-goals: replacing AE2's storage framework; making MEGA Cells / Applied Mekanistics required;
+redesigning AE2's partition/upgrade/menu behavior.
 
 ## 2. Package layout
 
-| Package | Responsibility |
-| --- | --- |
-| `top.likoslupus.ae2objects` | NeoForge entry point only. |
-| `...cell` | Deep-cell domain model: `CellTier`, `DeepCellSpec`, capacity math, item contract, stack metadata. |
-| `...cell.item` | Concrete item forms. Currently `DeepStorageCellItem`; later `DeepPortableCellItem`. |
-| `...cell.inventory` | AE2 runtime adapter: `DeepCellInventory`, `DeepCellHandler`, tooltip projection. |
-| `...cell.persistence` | UUID storage repository, SavedData model and AE-key serialization boundary. |
-| `...registry` | NeoForge registrations plus the `DeepCellRegistration` catalog. |
-| `...integration.ae2` | Required AE2 binding: cell handler, drive models and upgrades. |
-| `...integration.megacells` | Planned optional MEGA Cells content/source binding. |
-| `...integration.appmek` | Planned optional chemical key type, validator and menu binding. |
-| `...data` | Data generation. |
-| `...command` | `/ae2objects` commands. |
-| `...client` | Client-only bootstrap. |
-| `...mixin` | Container-copy hook for independent UUID cloning. |
+| Package                     | Responsibility                                                                                                                                             |
+|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `top.likoslupus.ae2objects` | NeoForge entry point (`Ae2Objects`) and `id(...)`.                                                                                                         |
+| `...cell.model`             | Pure product model: `CellContentType`, `CellTier`, `CellForm`, `CellDefinition`, `DeepCellCatalog`, `CellCapacity`, `CellUpgradeProfile`.                  |
+| `...cell.channel`           | Runtime channel abstraction: `StorageChannelBinding`, `StorageChannelRegistry`, `PortableMenuBinding`, `PortableMenuRegistry`.                             |
+| `...cell.storage`           | Storage engine: `DeepCellContents`, `DeepCellSession`, `DeepCellFilter`, `NestedCellPolicy`, `DeepCellInventoryFactory`.                                   |
+| `...cell.inventory`         | AE2 `StorageCell` adapter + handler: `DeepCellInventory`, `DeepCellHandler`.                                                                               |
+| `...cell.persistence`       | UUID repository: `CellRecord`, `CellRepository`, `SavedDataCellRepository`, `CellContentsCodec`.                                                           |
+| `...cell.stack`             | Client projection: `CellStackData`, `CellStackSnapshot`, `CellView`.                                                                                       |
+| `...cell.item`              | Item forms: `DeepCellDefinitionProvider`, `DeepDriveCellItem`, `DeepPortableCellItem`, `CellWorkbenchSupport`, `CellCloneService`.                         |
+| `...cell.ui`                | Tooltip projection (`DeepCellTooltip`).                                                                                                                    |
+| `...platform`               | `IntegrationSet`, `IntegrationId`, `ServerCellContext`.                                                                                                    |
+| `...registry`               | NeoForge registration + catalog: `ModItems`, `ModDataComponents`, `RegisteredCells`, `RegisteredHousings`, `CellRegistrationPlan`, `CellComponentSources`. |
+| `...integration.ae2`        | Required AE2 bindings: `Ae2Bootstrap`, `ItemChannelBinding`, `FluidChannelBinding`, `Ae2Integration`.                                                      |
+| `...integration.appmek`     | Optional Applied Mekanistics seam (`AppMekIntegration`).                                                                                                   |
+| `...data`                   | Data generation: recipes, MEGA conditional recipes, GameTest structures.                                                                                   |
+| `...command`                | `/ae2objects` commands.                                                                                                                                    |
+| `...client`                 | Client-only bootstrap.                                                                                                                                     |
+| `...mixin`                  | Container-copy hook for independent UUID cloning.                                                                                                          |
+| `gametest` source set       | `GameTestRegistrar`, `GameTestFunctions`, `DeepCellTestSupport` (dev-only; not shipped).                                                                   |
 
-The important dependency direction is:
-
-```text
-bootstrap / registry / integrations
-            │
-            ▼
-        cell domain
-       /           \
- inventory       persistence
-       \           /
-            AE2 API
-```
-
-Optional integrations may construct domain objects, but the domain never imports optional-mod
-classes.
+> **Note:** the package is `registry`, not `content`. An earlier draft of the implementation plan
+> proposed renaming it; that rename was deliberately skipped to avoid risky file moves.
 
 ## 3. Domain model
 
-### 3.1 `CellTier`
-
-`CellTier` is the single source of truth for tier IDs, byte capacity and idle drain. It already
-contains all ten documented tiers:
-
-```text
-1k, 4k, 16k, 64k, 256k, 1m, 4m, 16m, 64m, 256m
-```
-
-Only the first five are registered as content today. MEGA integration can opt into the remaining
-five without changing inventory code or adding another capacity table.
-
-### 3.2 `DeepCellSpec`
-
-A `DeepCellSpec` defines storage semantics independently of the concrete item form:
-
-- tier;
-- `AEKeyType`;
-- whether fuzzy partitioning is supported;
-- an extra `Predicate<AEKey>` content validator.
-
-The validator is the isolation seam for Applied Mekanistics. The future appmek integration can build
-this predicate using `MekanismKey` and `ChemicalAttributeValidator` inside
-`integration.appmek`; shared code only sees a `Predicate<AEKey>`.
-
-### 3.3 `DeepCellCapacity`
-
-All byte/native-unit conversions live in `DeepCellCapacity`:
-
-```text
-totalAmount     = totalBytes * amountPerByte
-usedBytes       = storedAmount / amountPerByte
-freeBytes       = totalBytes - usedBytes
-remainingAmount = totalAmount - storedAmount
-```
-
-`remainingAmount`, not `freeBytes`, is used to clamp insertion. This matters for fluid/chemical key
-types where one byte represents 1000 native units.
-
-### 3.4 `DeepCellItem`
-
-`DeepCellItem` is the common capability contract for normal and portable cells. It exposes a
-`DeepCellSpec`, derives key type/bytes/idle drain from that spec, centralizes the generic blacklist
-rules, and owns independent-storage cloning semantics.
-
-A future portable implementation can therefore be:
+### 3.1 `CellContentType`
 
 ```java
-final class DeepPortableCellItem extends AbstractPortableCell implements DeepCellItem {
-    // portable menu / energy behavior only
+ITEM("item",1L,true)
+
+FLUID("fluid",1_000L,false)
+
+CHEMICAL("chemical",1_000L,false)
+```
+
+Carries the ID fragment, the deep-cell **`amountPerByte`** (product rule, *not* AE2's own ratio) and
+whether **fuzzy** partitioning is supported. It deliberately references no AE or foreign type.
+
+### 3.2 `CellTier`
+
+The single source of truth for tier prefix, byte capacity and idle drain:
+
+```
+1k 4k 16k 64k 256k | 1m 4m 16m 64m 256m
+```
+
+with helpers `ae2Tiers()` (`1k`–`256k`) and `megaTiers()` (`1m`–`256m`). Values are decimal
+(`1m = 1,000,000`); see [`values.md`](values.md).
+
+### 3.3 `CellForm`
+
+`DRIVE` or `PORTABLE`. Form only changes interaction (menu/battery/disassembly) and the
+portable-specific capacity/drain rules.
+
+### 3.4 `CellDefinition`
+
+`CellDefinition(type, tier, form)` is the **stable identity** of a cell; every derived ID lives
+here:
+
+```java
+itemId()          // deep_<type>_storage_cell_<tier>  |  deep_portable_<type>_cell_<tier>
+
+id()              // ae2objects:<itemId>
+
+storageBytes()    // DRIVE: tier.bytes()   PORTABLE: tier.bytes() / 2
+
+idleDrain()       // DRIVE: tier drain     PORTABLE: 1.0
+
+inDriveModelId()  // block/drive/cells/deep_<type>_storage_cell_<tier>
+
+translationKey()  // text.ae2objects.deep_<type>_storage_cells
+```
+
+It references no `AEKeyType`, `Item`, `DeferredItem`, `MenuType`, `SavedData` or foreign class.
+
+### 3.5 `DeepCellCatalog`
+
+The complete product model: `3 types × 10 tiers × 2 forms = 60` definitions (`DRIVE_CELLS`,
+`PORTABLE_CELLS`, `ALL_CELLS`). This is a *catalog*, not the set of registered items (see
+`CellRegistrationPlan`).
+
+### 3.6 `CellCapacity`
+
+Pure byte/native-unit math:
+
+```text
+totalAmount     = bytes * amountPerByte
+usedBytes       = storedAmount / amountPerByte
+freeBytes       = bytes - usedBytes
+remainingAmount = totalAmount - storedAmount
+isFull          = remainingAmount == 0
+```
+
+`remainingAmount` (not `freeBytes`) clamps insertion; there is no per-type overhead.
+
+### 3.7 `CellUpgradeProfile`
+
+Derived from `type × form`: which upgrades are sensible and how many slots exist.
+
+| Type             | Form     | Fuzzy | Inverter | Void | Energy | Slots |
+|------------------|----------|------:|---------:|-----:|-------:|------:|
+| Item             | Drive    |     1 |        1 |    1 |      0 |     3 |
+| Fluid / Chemical | Drive    |     0 |        1 |    1 |      0 |     2 |
+| Item             | Portable |     1 |        1 |    1 |     ≤4 |     4 |
+| Fluid / Chemical | Portable |     0 |        1 |    1 |     ≤4 |     3 |
+
+The Equal Distribution Card is intentionally excluded: it divides capacity by the type count, which
+is meaningless with no type limit.
+
+## 4. Runtime channel abstraction
+
+A `StorageChannelBinding` maps a product `CellContentType` to a concrete AE2 `AEKeyType` and decides
+`accepts(AEKey)`:
+
+```java
+public interface StorageChannelBinding {
+
+    CellContentType type();
+
+    AEKeyType keyType();
+
+    boolean accepts(AEKey key);
+
 }
 ```
 
-It does not need a second storage implementation.
+`StorageChannelRegistry` holds one binding per type. `Ae2Bootstrap` registers
+`ItemChannelBinding` → `AEKeyType.items()` and `FluidChannelBinding` → `AEKeyType.fluids()`. The
+optional chemical binding will be registered by `integration.appmek`.
 
-## 4. Runtime inventory
+`PortableMenuRegistry` mirrors this for menus (`MEStorageMenu.PORTABLE_ITEM_CELL_TYPE`,
+`PORTABLE_FLUID_CELL_TYPE`, and later `AMMenus.PORTABLE_CHEMICAL_CELL_TYPE`).
 
-`DeepCellInventory` implements AE2 `StorageCell` and is deliberately restricted to runtime storage
-behavior:
+## 5. Storage engine
 
-- partition / inverter / fuzzy filtering;
-- insert and extract;
-- cell status;
-- lazy content loading;
-- triggering persistence after mutation.
-
-It does **not** own SavedData codecs, tooltip formatting or registration.
-
-### 4.1 Key-type-aware capacity
-
-Insertion first checks `DeepCellSpec.accepts(key)`, then partition rules and nested-cell rules. The
-accepted amount is:
-
-```text
-min(requestedAmount, capacity.remainingAmount(storedAmount))
+```mermaid
+flowchart TD
+    Factory["DeepCellInventoryFactory.create(stack, saveProvider, context)"]
+    Factory --> Def["DeepCellDefinitionProvider.definition()"]
+    Factory --> Channel["StorageChannelRegistry.require(type)"]
+    Factory --> Workbench["CellWorkbenchSupport.filter(stack, def)"]
+    Factory --> Session["new DeepCellSession(stack, def, context)"]
+    Factory --> Inv["new DeepCellInventory(def, channel, saveProvider, session, filter)"]
 ```
 
-The same path works for item, fluid and chemical keys. Extraction is fully `long`-based; there is no
-`Integer.MAX_VALUE` clamp.
+### 5.1 `DeepCellContents`
 
-### 4.2 Client preview
+The single source of truth for loaded amounts: an `Object2LongMap<AEKey>` plus derived
+`totalAmount()` / `typeCount()`. There are **not** three drifting counters.
 
-The authoritative inventory exists only on the server. The ItemStack synchronizes:
+### 5.2 `DeepCellSession`
 
-- cell UUID;
-- total stored native amount;
-- stored type count;
-- AE2's short `STORAGE_CELL_INV` preview.
+Owns the **per-ItemStack server lifecycle**: UUID, lazy load, dirty flag, repository access,
+serialize/deserialize via `CellContentsCodec`, publish the client snapshot, and delete the record
+when the cell becomes empty. It knows nothing about partition, fuzzy, capacity or `CellState`.
 
-Client-only inventory instances read this projection for status and tooltips.
+UUID lifecycle:
 
-## 5. Persistence
+| Situation                             | Behaviour                                   |
+|---------------------------------------|---------------------------------------------|
+| New empty cell                        | no UUID, no record                          |
+| `SIMULATE` insertion                  | no UUID, no record, no stack mutation       |
+| First successful `MODULATE` insertion | allocate UUID + empty record                |
+| Cell becomes empty                    | delete record, clear UUID + client snapshot |
 
-### 5.1 UUID-addressed contents
+### 5.3 `DeepCellInventory`
 
-Deep-cell contents remain external to the ItemStack:
-
-```text
-ItemStack
-  └─ cell_id UUID
-       │
-       ▼
-DeepStorageManager (SavedData)
-  └─ Map<UUID, DeepCellStorage>
-       │
-       ├─ serialized AE keys
-       ├─ parallel long amounts
-       ├─ total stored amount
-       └─ optional original cell item ID
-```
-
-`DeepStorageManager` is now a repository-style API. Callers can find, create, replace and remove
-records but no longer receive its mutable backing map.
-
-### 5.2 `DeepCellStorage`
-
-`DeepCellStorage` is an immutable record from the caller's perspective. Mutable `ListTag` and
-`long[]` values are defensively copied on input and output.
-
-The legacy persisted payload is intentionally unchanged:
+Implements AE2 `StorageCell` **only**:
 
 ```text
-keys
-amts
-item_count
+accept (channel) -> filter (partition/fuzzy) -> nested-cell policy -> capacity clamp
+-> insert/extract/available/status/idle drain -> persistence via Session
 ```
 
-`item_count` now means **stored native amount**. The old name is retained only for save
-compatibility.
+It contains no `ITEM`/`FLUID`/`CHEMICAL`/`DRIVE`/`PORTABLE` branches and no concrete item
+dependency. When the Overflow Destruction Card is installed and at least part of an insertion is
+accepted, `insert` reports the full request as handled (the excess is destroyed); if there is no
+space at all, nothing is voided.
 
-A new optional codec field, `cell_item`, stores the original registered item ID. Old records decode
-without it.
+### 5.4 `DeepCellFilter` and `NestedCellPolicy`
 
-### 5.3 `DeepCellStorageIo`
+- `DeepCellFilter` is built from the cell's config inventory + upgrades + fuzzy mode; the engine
+  only asks `accepts(AEKey)`. Fuzzy is honoured only when the type supports it and the Fuzzy Card is
+  installed.
+- `NestedCellPolicy` mirrors AE2's rule: an item that is itself a storage cell may only be stored if
+  that cell reports `canFitInsideCell()`. Deep cells always report `false`, so they can never be
+  nested.
 
-AE key serialization requires registry context, so it lives in a dedicated boundary instead of the
-inventory or SavedData record. Loading also normalizes malformed records (mismatched key/amount
-lists, invalid keys, wrong key types) on the next save.
+## 6. Persistence
 
-### 5.4 Server access bridge
+```text
+ItemStack (cell_id UUID, cell_item_count, cell_type_count, fuzzy_mode, ae2:storage_cell_inv)
+   │
+   ▼
+CellRepository  ── SavedDataCellRepository  (SavedData ae2objects:storage_manager)
+   └─ Map<UUID, CellRecord>
+        ├─ keys      (serialized AE keys)        [legacy name]
+        ├─ amts      (parallel long amounts)     [legacy name]
+        ├─ item_count (total native amount)      [legacy name]
+        └─ cell_item  (source cell registry id)  [new, optional]
+```
 
-AE2's cell-handler API does not provide a level/server parameter. `DeepStorageAccess` is therefore a
-small lifecycle-owned bridge to the current server's `DeepStorageManager`. It is populated on
-`ServerStartedEvent` and cleared on `ServerStoppedEvent`; global state does not leak into the domain
-model beyond this boundary.
+- `CellRepository` is a tiny interface (`find`/`contains`/`put`/`remove`) that must not mention
+  `HolderLookup`, `MinecraftServer`, `ItemStack` or `AEKey`.
+- `CellContentsCodec` is the **only** place that touches `AEKey.CODEC`, `NbtOps` and registries. It
+  repairs invalid keys, wrong key types, zero/negative amounts, duplicate keys, length mismatches
+  and stored-amount mismatches, and reports whether it repaired.
+- `ServerCellContext(repository, registries)` is installed on `ServerStartedEvent` and cleared on
+  `ServerStoppedEvent`; `platform` owns this lifecycle.
 
-## 6. Stack metadata
+## 7. Client projection
 
-`DeepCellStackData` is the only shared helper that knows the ItemStack data-component contract.
-
-| Registry ID | Java meaning | Type |
-| --- | --- | --- |
-| `ae2objects:cell_id` | storage identity | UUID |
-| `ae2objects:cell_item_count` | stored native amount (legacy ID retained) | long |
-| `ae2objects:cell_type_count` | stored distinct key count | int |
-| `ae2objects:fuzzy_mode` | item-cell fuzzy mode | `FuzzyMode` |
-
-This avoids spreading component-name semantics through inventory, commands, cloning and UI code.
-
-## 7. Registration catalog
-
-The five shipped item cells are no longer five independent blocks of registry/model/upgrade code.
-They are generated from:
-
-- the five AE2 `CellTier`s;
-- the corresponding AE2 core components;
-- one item-family spec.
-
-Every registered normal cell produces a `DeepCellRegistration` descriptor. The same descriptors are
-consumed by:
-
-- creative-tab population;
-- AE2 drive model registration;
-- AE2 upgrade registration;
-- recipe generation.
-
-Adding a normal fluid family therefore does not require another set of switch statements or static
-lists.
-
-Core/housing references are lazy suppliers. This is important for future optional integrations:
-MEGA component lookup can be isolated and deferred instead of forcing foreign classes to load while
-the shared registry class initializes.
-
-## 8. Recovery and cloning
-
-### 8.1 Independent cloning
-
-The `DeepCellCopyMixin` container-copy hook calls `DeepCellItem.copyWithIndependentStorage`:
-
-1. copy the ItemStack;
-2. on the authoritative server, allocate a fresh UUID;
-3. reuse the immutable storage snapshot under the new UUID;
-4. keep the synchronized summary/preview on the new stack.
-
-On the client, no unbacked UUID is invented; the server remains authoritative.
-
-### 8.2 Recovery
-
-New/visited SavedData records remember their original `cell_item` registry ID. `/ae2objects recover`
-uses that ID and verifies that the resolved item implements `DeepCellItem`.
-
-Legacy orphan records have no `cell_item`; for compatibility they fall back to the historical 256k
-item cell behavior. Once such a recovered/used cell is persisted again, its type metadata becomes
-explicit.
-
-This is required before multiple key types and portable forms exist; a UUID alone cannot otherwise
-identify which cell item should be reconstructed.
-
-## 9. Optional integration boundaries
-
-### 9.1 AE2 fluids
-
-No foreign dependency is required. Create specs with:
+Server and client are two different models; the client never reaches `SavedDataCellRepository`.
 
 ```java
-DeepCellSpec.fluids(tier)
+public record CellStackSnapshot(
+        @Nullable UUID id,
+        long storedAmount,
+        int storedTypes,
+        List<GenericStack> preview,
+        FuzzyMode fuzzyMode
+) {
+
+}
 ```
 
-Fluid specs use `AEKeyType.fluids()` with the deep-cell ratio `amountPerByte = 1000` and disable fuzzy behavior.
+`CellStackData` is the **sole owner** of the ItemStack data-component contract; `CellView` holds
+pure status/capacity projections; `DeepCellTooltip` reads only the snapshot + workbench state and
+never constructs a storage inventory. See §9 for the component table.
 
-### 9.2 MEGA Cells
+## 8. Item layer
 
-Planned `integration.megacells` responsibilities:
+- `DeepCellDefinitionProvider.definition()` — the item's `CellDefinition`.
+- `DeepDriveCellItem extends Item implements DeepCellDefinitionProvider, ICellWorkbenchItem,
+  AEToolItem` — drive/chest form; interaction, workbench bridge, tooltip and disassembly trigger.
+- `DeepPortableCellItem extends AbstractPortableCell implements DeepCellDefinitionProvider` —
+  **not** `IBasicCellItem`, so AE2's type/slot limits never apply; it reuses AE2's battery, menu
+  opening, dye colour and energy-aware disassembly.
+- `CellWorkbenchSupport` resolves channel + upgrade profile from the definition and provides
+  `config(...)`, `upgrades(..., onChanged)`, `fuzzyMode(...)`, `setFuzzyMode(...)` for both forms.
+- `CellCloneService.copyIndependent(stack)` performs clone (fresh UUID + deep copy); the mixin
+  (`DeepCellCopyMixin`) only calls it, and never invents a UUID client-side.
 
-- resolve `1m`–`256m` core components;
-- register the extra normal/portable items using `CellTier.megaTiers()`;
-- add mod-loaded conditions to recipes.
+## 9. Data components
 
-The core inventory and persistence packages do not change.
+| Registry ID                  | Meaning                                             | Type                 |
+|------------------------------|-----------------------------------------------------|----------------------|
+| `ae2objects:cell_id`         | storage identity                                    | `UUID`               |
+| `ae2objects:cell_item_count` | stored **native amount** (legacy name kept)         | `long`               |
+| `ae2objects:cell_type_count` | stored distinct key count                           | `int`                |
+| `ae2objects:fuzzy_mode`      | item-cell fuzzy mode                                | `FuzzyMode`          |
+| `ae2:storage_cell_inv`       | AE2 client preview (≤10 entries, amount descending) | `List<GenericStack>` |
 
-### 9.3 Applied Mekanistics
+## 10. Registration and content
 
-Planned `integration.appmek` responsibilities:
+- `DeepCellCatalog` = the 60 product definitions.
+- `CellRegistrationPlan` selects the active subset: item + fluid (including MEGA tiers) are always
+  active; chemical is active only once a chemical `StorageChannelBinding` exists.
+- `RegisteredCells` = `Map<CellDefinition, DeferredItem<?>>` (the registry handle only).
+- `RegisteredHousings` = `Map<CellContentType, DeferredItem<Item>>`.
+- `CellComponentSources.forTier(tier)` = the tier's storage component:
+  `1k`–`256k` → `ae2:cell_component_*` (no mod); `1m`–`256m` → `megacells:cell_component_*`
+  (optional MEGA mod).
+- `ModItems.defineContent(IntegrationSet)` registers housings + active drive/portable cells.
+- `Ae2Integration` registers the cell handler, drive models, upgrades and (for portables) the
+  NeoForge energy capability.
 
-- obtain `MekanismKeyType.TYPE`;
-- create a chemical `DeepCellSpec` with `supportsFuzzy = false`;
-- supply the chemical validator predicate;
-- bind the chemical portable menu;
-- register content only from the guarded integration bootstrap.
+Creative tab order: item housing, fluid housing, chemical housing, all non-portable cells, all
+portable cells — sorted by `form → type → tier`, and each powered (portable) item also gets a
+fully-charged copy.
 
-No shared class imports `MekanismKey`, `MekanismKeyType` or Mekanism APIs.
+## 11. Optional integrations
 
-## 10. Portable cells
+```mermaid
+flowchart LR
+    subgraph Required
+        AE2["ae2"]
+    end
+    subgraph Optional
+        MEGA["megacells"]
+        APPMEK["appmek"]
+    end
+    Core["ae2objects core<br/>model · storage · item · integration.ae2"]
+    IAM["integration.appmek"]
+    Core --> AE2
+    Core -. " detect (IntegrationSet) " .-> MEGA
+    Core -. " detect (IntegrationSet) " .-> APPMEK
+    Core -. " delegate if loaded " .-> IAM
+```
 
-Portable cells should reuse these existing pieces unchanged:
+- **MEGA Cells** only affects the **component source** and the **recipe condition**. MEGA-tier cells
+  are always registered (stable IDs); only their recipes are gated by `neoforge:mod_loaded`.
+- **Applied Mekanistics** is a mod-id-gated skeleton (`AppMekIntegration`) that reserves the
+  chemical channel + portable menu. It references no appmek/Mekanism class. `CellRegistrationPlan`
+  activates chemical content automatically once the channel is registered.
+- `IntegrationSet.detect()` centralizes `ModList` lookups; detection is not scattered across items,
+  inventory, tooltips and datagen.
 
-- `CellTier`;
-- `DeepCellSpec`;
-- `DeepCellItem`;
-- `DeepCellInventory` / `DeepCellHandler`;
-- `DeepStorageManager` / `DeepCellStorageIo`;
-- `DeepCellStackData`;
-- clone/recovery metadata.
+## 12. Bootstrap and lifecycle
 
-The portable class only adds form-specific concerns: menu type, battery, charge rate, energy-card
-handling and portable disassembly output.
+```mermaid
+sequenceDiagram
+    participant Mod as Ae2Objects (ctor)
+    participant Boot as Ae2Bootstrap
+    participant Int as AppMekIntegration
+    participant Items as ModItems
+    participant Server as Server lifecycle
+    Mod ->> Boot: bootstrapRequired() (item + fluid channels, portable menus)
+    Mod ->> Int: bootstrapRequired(IntegrationSet.detect())
+    Mod ->> Items: defineContent(integrations); register(modBus); ModDataComponents.register
+Mod->>Mod: Ae2Integration.initCommon/registerCapabilities, creative tab
+Server-->>Mod: ServerStartedEvent -> ServerCellContext.onServerStarted
+Server-->>Mod: ServerStoppedEvent -> ServerCellContext.onServerStopped
+```
 
-## 11. Dependency rule
+Foreign classes are only touched after the corresponding mod is confirmed loaded.
 
-The intended dependency rule for future work is simple:
+## 13. Game tests
 
-> A new key type or tier may add a spec, registration and integration binding; it must not add a new
-> inventory, persistence manager or copy of the capacity algorithm.
+A dedicated `gametest` source set (added to the dev mod, excluded from the release jar) registers
+NeoForge `GameTest`s: storage-engine cases (insert/extract, capacity clamp, UUID lifecycle,
+persistence, partition, fuzzy, nested-cell rejection), block compatibility (ME Chest, ME Drive) and
+portable/interaction cases (power, menu host, container-menu clone, recovery). The all-air plot
+structure is generated by `GameTestStructureProvider` and is excluded from the release jars.
+
+## 14. Extension guide
+
+> A new key type, tier or form may add a `CellDefinition`/tier value, a channel binding, a
+> registration and resources. It must **not** add a new inventory, persistence manager, capacity
+> algorithm or a key-type `if/else` in the engine.
+
+- **New tier** — add a `CellTier` value and a `CellComponentSource`; the catalog and registration
+  pick it up.
+- **New key type** — add a `CellContentType` + a `StorageChannelBinding` (+ portable menu binding);
+  register it from the owning integration. The engine is unchanged.
+- **New form** — add a `CellForm` and an item implementation implementing
+  `DeepCellDefinitionProvider`; reuse `CellWorkbenchSupport` + `CellCloneService`.
+
+## 15. Dependency rule (hard constraint)
+
+| Package              | May depend on                                                                                    | Must not depend on                                         |
+|----------------------|--------------------------------------------------------------------------------------------------|------------------------------------------------------------|
+| `cell.model`         | JDK, `Identifier`                                                                                | AE/NeoForge, `Item`, registries, `SavedData`, foreign mods |
+| `cell.channel`       | `cell.model`, AE `AEKey` API                                                                     | item classes, `SavedData`, registration, foreign mods      |
+| `cell.storage`       | `cell.model`, `cell.channel`, `cell.persistence`/`cell.stack` abstractions, AE `StorageCell` API | foreign mods, concrete item classes, datagen, commands     |
+| `cell.persistence`   | AE key codecs, Minecraft `SavedData`/NBT                                                         | item classes, foreign mods                                 |
+| `cell.item`          | `model`, `stack`, workbench support, AE item APIs                                                | `SavedData` maps, AE key codecs                            |
+| `integration.appmek` | core + AppMek + Mekanism (future)                                                                | nothing depends back on it                                 |
