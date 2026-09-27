@@ -42,12 +42,7 @@ import top.likoslupus.ae2objects.registry.ModDataComponents;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static top.likoslupus.ae2objects.gametest.DeepCellTestSupport.assertAmount;
-import static top.likoslupus.ae2objects.gametest.DeepCellTestSupport.assertTrue;
-import static top.likoslupus.ae2objects.gametest.DeepCellTestSupport.definition;
-import static top.likoslupus.ae2objects.gametest.DeepCellTestSupport.drive;
-import static top.likoslupus.ae2objects.gametest.DeepCellTestSupport.inventory;
-import static top.likoslupus.ae2objects.gametest.DeepCellTestSupport.portable;
+import static top.likoslupus.ae2objects.gametest.DeepCellTestSupport.*;
 
 /**
  * GameTest bodies. Each method is a {@link Consumer} of {@link GameTestHelper} registered by
@@ -65,23 +60,9 @@ public final class GameTestFunctions {
         return ResourceKey.create(Registries.TEST_FUNCTION, Ae2Objects.id(path));
     }
 
-    private static AEItemKey stone() {
-        return AEItemKey.of(Items.STONE);
-    }
-
-    private static AEItemKey diamond() {
-        return AEItemKey.of(Items.DIAMOND);
-    }
-
-    private static AEFluidKey water() {
-        return AEFluidKey.of(Fluids.WATER);
-    }
-
     public static void alwaysPass(GameTestHelper helper) {
         helper.succeed();
     }
-
-    // ---------------------------------------------------------------- storage engine
 
     public static void driveInsertExtract(GameTestHelper helper) {
         var stone = stone();
@@ -98,6 +79,10 @@ public final class GameTestFunctions {
         helper.succeed();
     }
 
+    private static AEItemKey stone() {
+        return AEItemKey.of(Items.STONE);
+    }
+
     public static void capacityClamp(GameTestHelper helper) {
         var stone = stone();
         var cell = inventory(drive(CellContentType.ITEM, CellTier.K1));
@@ -110,12 +95,19 @@ public final class GameTestFunctions {
         helper.succeed();
     }
 
+    // ---------------------------------------------------------------- storage engine
+
     public static void fluidCapacityLong(GameTestHelper helper) {
         var water = water();
         var cell = inventory(drive(CellContentType.FLUID, CellTier.M256));
 
         // 256m fluid cell: 256_000_000 bytes * 1_000 mB/byte = 256_000_000_000 mB.
-        var accepted = cell.insert(water, 300_000_000_000L, Actionable.MODULATE, IActionSource.empty());
+        var accepted = cell.insert(
+                water,
+                300_000_000_000L,
+                Actionable.MODULATE,
+                IActionSource.empty()
+        );
         assertTrue(
                 helper,
                 accepted == 256_000_000_000L,
@@ -124,6 +116,10 @@ public final class GameTestFunctions {
         assertAmount(helper, cell, water, 256_000_000_000L, "stored mB after clamp");
 
         helper.succeed();
+    }
+
+    private static AEFluidKey water() {
+        return AEFluidKey.of(Fluids.WATER);
     }
 
     public static void uuidLifecycle(GameTestHelper helper) {
@@ -135,7 +131,11 @@ public final class GameTestFunctions {
 
         // SIMULATE must not allocate an identity or mutate the stack.
         cell.insert(stone, 5, Actionable.SIMULATE, IActionSource.empty());
-        assertTrue(helper, CellStackData.cellId(stack) == null, "SIMULATE must not allocate a UUID");
+        assertTrue(
+                helper,
+                CellStackData.cellId(stack) == null,
+                "SIMULATE must not allocate a UUID"
+        );
 
         // First MODULATE insertion allocates the UUID and a repository record.
         cell.insert(stone, 5, Actionable.MODULATE, IActionSource.empty());
@@ -185,6 +185,10 @@ public final class GameTestFunctions {
         helper.succeed();
     }
 
+    private static AEItemKey diamond() {
+        return AEItemKey.of(Items.DIAMOND);
+    }
+
     public static void partitionBlacklist(GameTestHelper helper) {
         var stone = stone();
         var diamond = diamond();
@@ -231,7 +235,7 @@ public final class GameTestFunctions {
     public static void fluidRejectsFuzzy(GameTestHelper helper) {
         var definition = definition(CellContentType.FLUID, CellTier.K1, CellForm.DRIVE);
         var stack = drive(CellContentType.FLUID, CellTier.K1);
-        IUpgradeInventory upgrades = CellWorkbenchSupport.upgrades(stack, definition);
+        var upgrades = CellWorkbenchSupport.upgrades(stack, definition);
         upgrades.addItems(AEItems.FUZZY_CARD.stack());
 
         CellWorkbenchSupport.setFuzzyMode(stack, definition, FuzzyMode.IGNORE_ALL);
@@ -262,7 +266,8 @@ public final class GameTestFunctions {
         var host = inventory(drive(CellContentType.ITEM, CellTier.K1));
         assertTrue(
                 helper,
-                host.insert(AEItemKey.of(populated), 1, Actionable.MODULATE, IActionSource.empty()) == 0,
+                host.insert(AEItemKey.of(populated), 1, Actionable.MODULATE, IActionSource.empty())
+                        == 0,
                 "a deep cell must not be stored inside another deep cell"
         );
 
@@ -382,8 +387,7 @@ public final class GameTestFunctions {
 
         // Mirrors /ae2objects recover: rebuild an item from the persisted cell_item id.
         var itemId = record.cellItemId()
-                .map(Identifier::tryParse)
-                .filter(Objects::nonNull);
+                .map(Identifier::tryParse);
         assertTrue(helper, itemId.isPresent(), "record must persist the source cell id");
 
         var recovered = new ItemStack(BuiltInRegistries.ITEM.getValue(itemId.get()));

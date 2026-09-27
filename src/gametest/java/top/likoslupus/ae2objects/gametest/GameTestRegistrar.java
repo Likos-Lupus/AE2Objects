@@ -26,10 +26,6 @@ public final class GameTestRegistrar {
 
     private static final int MAX_TICKS = 200;
     private static final int SETUP_TICKS = 1;
-
-    private record TestCase(String path, Consumer<GameTestHelper> function) {
-    }
-
     private static final List<TestCase> TESTS = List.of(
             new TestCase("always_pass", GameTestFunctions::alwaysPass),
             new TestCase("drive_insert_extract", GameTestFunctions::driveInsertExtract),
@@ -55,11 +51,12 @@ public final class GameTestRegistrar {
 
     @SubscribeEvent
     public static void registerFunctions(RegisterEvent event) {
-        event.register(Registries.TEST_FUNCTION, helper ->
-                TESTS.forEach(test -> helper.register(
-                        GameTestFunctions.key(test.path()),
-                        test.function()
-                ))
+        event.register(
+                Registries.TEST_FUNCTION, helper ->
+                        TESTS.forEach(test -> helper.register(
+                                GameTestFunctions.key(test.path()),
+                                test.function()
+                        ))
         );
     }
 
@@ -83,6 +80,13 @@ public final class GameTestRegistrar {
                         )
                 )
         ));
+    }
+
+    private record TestCase(
+            String path,
+            Consumer<GameTestHelper> function
+    ) {
+
     }
 
 }

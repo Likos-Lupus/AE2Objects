@@ -21,18 +21,18 @@ final class DeepCellTestSupport {
     private DeepCellTestSupport() {
     }
 
+    static ItemStack drive(CellContentType type, CellTier tier) {
+        return new ItemStack(RegisteredCells.require(
+                definition(type, tier, CellForm.DRIVE)
+        ).get());
+    }
+
     static CellDefinition definition(
             CellContentType type,
             CellTier tier,
             CellForm form
     ) {
         return new CellDefinition(type, tier, form);
-    }
-
-    static ItemStack drive(CellContentType type, CellTier tier) {
-        return new ItemStack(RegisteredCells.require(
-                definition(type, tier, CellForm.DRIVE)
-        ).get());
     }
 
     static ItemStack portable(CellContentType type, CellTier tier) {
@@ -49,6 +49,21 @@ final class DeepCellTestSupport {
         return inventory;
     }
 
+    static void assertAmount(
+            GameTestHelper helper,
+            StorageCell inventory,
+            AEKey key,
+            long expected,
+            String message
+    ) {
+        var actual = stored(inventory, key);
+        assertTrue(
+                helper,
+                actual == expected,
+                message + " (expected " + expected + ", got " + actual + ")"
+        );
+    }
+
     static long stored(StorageCell inventory, AEKey key) {
         var counter = new KeyCounter();
         inventory.getAvailableStacks(counter);
@@ -63,21 +78,6 @@ final class DeepCellTestSupport {
         if (!condition) {
             throw helper.assertionException(Component.literal(message));
         }
-    }
-
-    static void assertAmount(
-            GameTestHelper helper,
-            StorageCell inventory,
-            AEKey key,
-            long expected,
-            String message
-    ) {
-        var actual = stored(inventory, key);
-        assertTrue(
-                helper,
-                actual == expected,
-                message + " (expected " + expected + ", got " + actual + ")"
-        );
     }
 
 }

@@ -4,11 +4,7 @@ import com.google.common.hash.Hashing;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.*;
 import net.minecraft.resources.Identifier;
 import top.likoslupus.ae2objects.Ae2Objects;
 
