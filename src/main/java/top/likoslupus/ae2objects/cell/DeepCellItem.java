@@ -1,11 +1,8 @@
 package top.likoslupus.ae2objects.cell;
 
-import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.AEKeyType;
-import appeng.api.storage.cells.IBasicCellItem;
 import appeng.api.storage.cells.ICellWorkbenchItem;
-import appeng.me.cells.BasicCellHandler;
 import appeng.util.ConfigInventory;
 import com.google.common.base.Preconditions;
 import net.minecraft.network.chat.Component;
@@ -57,18 +54,7 @@ public interface DeepCellItem extends ICellWorkbenchItem {
     }
 
     default boolean isBlackListed(ItemStack cellItem, AEKey requestedAddition) {
-        if (!channel().accepts(requestedAddition)) {
-            return true;
-        }
-
-        if (requestedAddition instanceof AEItemKey itemKey
-                && itemKey.getItem() instanceof IBasicCellItem
-        ) {
-            var inventory = BasicCellHandler.INSTANCE.getCellInventory(itemKey.toStack(), null);
-            return inventory != null && inventory.getUsedBytes() > 0;
-        }
-
-        return false;
+        return !channel().accepts(requestedAddition);
     }
 
     default StorageChannelBinding channel() {

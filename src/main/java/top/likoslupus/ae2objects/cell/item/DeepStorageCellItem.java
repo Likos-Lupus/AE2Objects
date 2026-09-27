@@ -25,8 +25,8 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import top.likoslupus.ae2objects.cell.DeepCellItem;
 import top.likoslupus.ae2objects.cell.DeepCellStackData;
-import top.likoslupus.ae2objects.cell.inventory.DeepCellInventory;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
+import top.likoslupus.ae2objects.cell.storage.DeepCellInventoryFactory;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 
@@ -92,7 +92,7 @@ public final class DeepStorageCellItem extends Item implements DeepCellItem, AET
             return 0xFFFFFFFF;
         }
 
-        var inventory = DeepCellInventory.createInventory(
+        var inventory = DeepCellInventoryFactory.create(
                 stack,
                 null,
                 null

@@ -1,40 +1,35 @@
 package top.likoslupus.ae2objects.cell.inventory;
 
 import appeng.api.config.Actionable;
-import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.networking.security.IActionSource;
-import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.cells.CellState;
 import appeng.api.storage.cells.ISaveProvider;
 import appeng.api.storage.cells.StorageCell;
 import appeng.api.upgrades.IUpgradeInventory;
-import appeng.core.definitions.AEItems;
 import appeng.util.ConfigInventory;
-import appeng.util.prioritylist.FuzzyPriorityList;
-import appeng.util.prioritylist.IPartitionList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import top.likoslupus.ae2objects.cell.DeepCellItem;
 import top.likoslupus.ae2objects.cell.model.CellCapacity;
 import top.likoslupus.ae2objects.cell.storage.DeepCellContents;
+import top.likoslupus.ae2objects.cell.storage.DeepCellFilter;
 import top.likoslupus.ae2objects.cell.storage.DeepCellSession;
-import top.likoslupus.ae2objects.platform.ServerCellContext;
+import top.likoslupus.ae2objects.cell.storage.NestedCellPolicy;
 import top.likoslupus.ae2objects.registry.Ae2ObjectsDataComponents;
 
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
-import static java.util.Objects.requireNonNull;
-
 /**
- * AE2 storage adapter for all deep-cell key types.
+ * Pure AE2 {@link StorageCell} engine for all deep-cell key types.
  *
- * <p>The inventory owns acceptance, filtering, capacity clamping and the {@link StorageCell}
- * contract only. Loaded contents and the persistence lifecycle live in
- * {@link DeepCellSession}.</p>
+ * <p>Owns acceptance, filtering, capacity clamping and the {@code StorageCell} contract only.
+ * Loaded contents and persistence live in {@link DeepCellSession}; partition/fuzzy behaviour lives
+ * in {@link DeepCellFilter}; nested-cell rules live in {@link NestedCellPolicy}. The engine must
+ * not branch on item/fluid/chemical or drive/portable.</p>
  */
 public final class DeepCellInventory implements StorageCell {
 
@@ -43,42 +38,35 @@ public final class DeepCellInventory implements StorageCell {
     private final ItemStack stack;
     private final @Nullable ISaveProvider container;
     private final DeepCellSession session;
+    private final DeepCellFilter filter;
 
-    private IPartitionList partitionList;
-    private IncludeExclude partitionListMode;
-
-    private DeepCellInventory(
+    public DeepCellInventory(
             DeepCellItem cellItem,
             ItemStack stack,
             @Nullable ISaveProvider saveProvider,
-            @Nullable ServerCellContext context
+            DeepCellSession session,
+            DeepCellFilter filter
     ) {
         this.cellItem = cellItem;
         this.capacity = cellItem.capacity();
         this.stack = stack;
         this.container = saveProvider;
-        this.session = new DeepCellSession(stack, cellItem.definition(), context);
-        updateFilter();
+        this.session = session;
+        this.filter = filter;
     }
 
-    private void updateFilter() {
-        var builder = IPartitionList.builder();
-        var upgrades = getUpgradesInventory();
-        var config = getConfigInventory();
-        var hasInverter = upgrades != null && upgrades.isInstalled(AEItems.INVERTER_CARD);
+    public static boolean hasCellUUID(ItemStack cell) {
+        return cell.getItem() instanceof DeepCellItem
+                && cell.has(Ae2ObjectsDataComponents.CELL_ID.get());
+    }
 
-        if (cellItem.supportsFuzzy()
-                && upgrades != null
-                && upgrades.isInstalled(AEItems.FUZZY_CARD)
-        ) {
-            builder.fuzzyMode(getFuzzyMode());
-        }
+    private static boolean isCellEmpty(@Nullable DeepCellInventory inventory) {
+        return inventory == null
+                || inventory.getAvailableStacks().isEmpty();
+    }
 
-        builder.addAll(config.keySet());
-        partitionListMode = hasInverter
-                ? IncludeExclude.BLACKLIST
-                : IncludeExclude.WHITELIST;
-        partitionList = builder.build();
+    public @Nullable UUID getCellUUID() {
+        return session.cellId();
     }
 
     public @Nullable IUpgradeInventory getUpgradesInventory() {
@@ -89,36 +77,16 @@ public final class DeepCellInventory implements StorageCell {
         return cellItem.getConfigInventory(stack);
     }
 
-    public FuzzyMode getFuzzyMode() {
-        return cellItem.supportsFuzzy()
-                ?
-                stack.getOrDefault(
-                        Ae2ObjectsDataComponents.FUZZY_MODE.get(),
-                        FuzzyMode.IGNORE_ALL
-                )
-                : FuzzyMode.IGNORE_ALL;
-    }
-
-    public static boolean hasCellUUID(ItemStack cell) {
-        return cell.getItem() instanceof DeepCellItem
-                && cell.has(Ae2ObjectsDataComponents.CELL_ID.get());
-    }
-
-    public @Nullable UUID getCellUUID() {
-        return session.cellId();
-    }
-
     public IncludeExclude getPartitionListMode() {
-        return partitionListMode;
+        return filter.mode();
     }
 
     public boolean isPreformatted() {
-        return !partitionList.isEmpty();
+        return filter.isPreformatted();
     }
 
     public boolean isFuzzy() {
-        return cellItem.supportsFuzzy()
-                && partitionList instanceof FuzzyPriorityList;
+        return filter.isFuzzy();
     }
 
     @Override
@@ -144,6 +112,11 @@ public final class DeepCellInventory implements StorageCell {
     }
 
     @Override
+    public boolean canFitInsideCell() {
+        return false;
+    }
+
+    @Override
     public void persist() {
         session.persist();
     }
@@ -165,22 +138,21 @@ public final class DeepCellInventory implements StorageCell {
     }
 
     @Override
-    public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
+    public long insert(
+            AEKey what,
+            long amount,
+            Actionable mode,
+            IActionSource source
+    ) {
         if (amount <= 0
                 || !cellItem.channel().accepts(what)
-                || !partitionList.matchesFilter(what, partitionListMode)
-                || cellItem.isBlackListed(stack, what)
-                || what instanceof AEItemKey itemKey
-                && itemKey.getItem() instanceof DeepCellItem
-                && !isCellEmpty(createInventory(itemKey.toStack(), null, session.context()))
+                || !filter.accepts(what)
+                || !NestedCellPolicy.accepts(what)
         ) {
             return 0;
         }
 
-        var accepted = Math.min(
-                amount,
-                capacity.remainingAmount(contents().totalAmount())
-        );
+        var accepted = Math.min(amount, capacity.remainingAmount(contents().totalAmount()));
         if (accepted <= 0) {
             return 0;
         }
@@ -193,32 +165,6 @@ public final class DeepCellInventory implements StorageCell {
             saveChanges();
         }
         return accepted;
-    }
-
-    private static boolean isCellEmpty(@Nullable DeepCellInventory inventory) {
-        return inventory == null
-                || inventory.getAvailableStacks().isEmpty();
-    }
-
-    public static @Nullable DeepCellInventory createInventory(
-            ItemStack stack,
-            @Nullable ISaveProvider saveProvider,
-            @Nullable ServerCellContext context
-    ) {
-        requireNonNull(stack, "Cannot create cell inventory for null ItemStack");
-
-        if (!(stack.getItem() instanceof DeepCellItem cellItem)
-                || !cellItem.isStorageCell(stack)
-        ) {
-            return null;
-        }
-
-        return new DeepCellInventory(
-                cellItem,
-                stack,
-                saveProvider,
-                context
-        );
     }
 
     private DeepCellContents contents() {

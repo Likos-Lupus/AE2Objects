@@ -11,6 +11,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
+import top.likoslupus.ae2objects.cell.storage.DeepCellInventoryFactory;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -22,7 +23,7 @@ public final class DeepCellTooltip {
     }
 
     public static void addCellInformation(ItemStack stack, List<Component> lines) {
-        var inventory = DeepCellInventory.createInventory(stack, null, null);
+        var inventory = DeepCellInventoryFactory.create(stack, null, null);
         if (inventory == null) {
             return;
         }
@@ -69,7 +70,7 @@ public final class DeepCellTooltip {
     }
 
     public static Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
-        var inventory = DeepCellInventory.createInventory(
+        var inventory = DeepCellInventoryFactory.create(
                 stack,
                 null,
                 null
