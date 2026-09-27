@@ -21,3 +21,9 @@ tasks.register("buildActive") {
     description = "Builds and collects the active version."
     dependsOn(":${stonecutter.current?.project ?: error("No active Stonecutter version")}:buildAndCollect")
 }
+
+tasks.register("gameTestActive") {
+    group = "verification"
+    description = "Runs the GameTests for the active version."
+    dependsOn(":${stonecutter.current?.project ?: error("No active Stonecutter version")}:runGameTestServer")
+}

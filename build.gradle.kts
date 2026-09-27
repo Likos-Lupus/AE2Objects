@@ -38,9 +38,21 @@ repositories {
     mavenCentral()
 }
 
+// Dedicated source set for NeoForge GameTests. It is added to the dev mod (so the harness can
+// discover and run it) but is excluded from the release jar (the jar task only takes main output).
+val gametest by sourceSets.creating
+gametest.compileClasspath += sourceSets.main.get().output
+gametest.runtimeClasspath += sourceSets.main.get().output
+
 configurations {
     testImplementation {
         extendsFrom(compileClasspath.get())
+    }
+    named(gametest.implementationConfigurationName) {
+        extendsFrom(configurations.getByName("implementation"))
+    }
+    named(gametest.compileOnlyConfigurationName) {
+        extendsFrom(configurations.getByName("compileOnly"))
     }
 }
 
@@ -87,6 +99,8 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks.named<Jar>("jar") {
+    // GameTest plot structures are only needed by the (non-shipped) gametest source set.
+    exclude("data/ae2objects/structure/**")
     manifest {
         attributes(
             "Implementation-Version" to project.version
@@ -100,6 +114,7 @@ tasks.register<Jar>("releaseJar") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(sourceSets.main.get().output) {
         exclude("META-INF/neoforge.mods.toml")
+        exclude("data/ae2objects/structure/**")
     }
     from(rootProject.file("src/main/resources/META-INF/neoforge.mods.toml")) {
         into("META-INF")
@@ -127,9 +142,12 @@ tasks.register<Copy>("buildAndCollect") {
 neoForge {
     version = neoForgeVersion
 
+    addModdingDependenciesTo(gametest)
+
     mods {
         create("ae2objects") {
             sourceSet(sourceSets.main.get())
+            sourceSet(gametest)
         }
     }
 
@@ -138,15 +156,19 @@ neoForge {
             client()
             gameDirectory.set(rootProject.layout.projectDirectory.dir("run"))
             ideFolderName.set(mcVersion)
-            systemProperty("forge.enabledGameTestNamespaces", "ae2objects")
         }
 
         create("server") {
             server()
             gameDirectory.set(rootProject.layout.projectDirectory.dir("run"))
             ideFolderName.set(mcVersion)
-            systemProperty("forge.enabledGameTestNamespaces", "ae2objects")
             programArgument("--nogui")
+        }
+
+        create("gameTestServer") {
+            type = "gameTestServer"
+            gameDirectory.set(rootProject.layout.projectDirectory.dir("run"))
+            ideFolderName.set(mcVersion)
         }
 
         create("serverData") {
