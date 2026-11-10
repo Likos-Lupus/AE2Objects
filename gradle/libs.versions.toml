@@ -1,5 +1,5 @@
 [versions]
-mod = "0.1.0"
+mod = "0.2.0"
 
 minecraft = "26.1.2"
 neoforge = "26.1.2.98"
