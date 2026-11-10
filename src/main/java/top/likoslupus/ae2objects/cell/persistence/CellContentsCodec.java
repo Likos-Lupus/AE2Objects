@@ -5,7 +5,6 @@ import appeng.api.stacks.AEKeyType;
 import appeng.api.stacks.GenericStack;
 import com.mojang.logging.LogUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -18,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Registry-aware serialization boundary between AE keys and the registry-agnostic
@@ -39,11 +39,11 @@ public final class CellContentsCodec {
         var amounts = record.stackAmounts();
         var tags = record.stackKeys();
         var repaired = amounts.length != tags.size();
-        var loaded = new Object2LongOpenHashMap<AEKey>();
+        var entries = Math.min(amounts.length, tags.size());
+        var contents = new DeepCellContents(entries);
         var ops = registries.createSerializationContext(NbtOps.INSTANCE);
         var total = 0L;
 
-        var entries = Math.min(amounts.length, tags.size());
         for (var index = 0; index < entries; index++) {
             var amount = amounts[index];
             var key = AEKey.CODEC
@@ -56,10 +56,10 @@ public final class CellContentsCodec {
                 continue;
             }
 
-            if (loaded.containsKey(key)) {
+            if (contents.amount(key) > 0) {
                 repaired = true;
             }
-            loaded.mergeLong(key, amount, Long::sum);
+            contents.insert(key, amount);
             total += amount;
         }
 
@@ -67,7 +67,7 @@ public final class CellContentsCodec {
             repaired = true;
         }
 
-        return new Decoded(new DeepCellContents(loaded), repaired);
+        return new Decoded(contents, repaired);
     }
 
     public static CellRecord encode(
@@ -75,9 +75,18 @@ public final class CellContentsCodec {
             HolderLookup.Provider registries,
             String cellItemId
     ) {
+        return encodeWithPreview(contents, registries, cellItemId).record();
+    }
+
+    public static Encoded encodeWithPreview(
+            DeepCellContents contents,
+            HolderLookup.Provider registries,
+            String cellItemId
+    ) {
         var keys = new ListTag();
         var amounts = new LongArrayList(contents.typeCount());
         var ops = registries.createSerializationContext(NbtOps.INSTANCE);
+        var preview = new PreviewCollector();
         var total = 0L;
 
         for (var entry : contents.asMap().object2LongEntrySet()) {
@@ -85,6 +94,8 @@ public final class CellContentsCodec {
             if (amount <= 0) {
                 continue;
             }
+
+            preview.offer(entry.getKey(), amount);
 
             var encoded = AEKey.CODEC
                     .encodeStart(ops, entry.getKey())
@@ -103,33 +114,79 @@ public final class CellContentsCodec {
             total += amount;
         }
 
-        return new CellRecord(
+        var record = new CellRecord(
                 keys,
                 amounts.toArray(new long[0]),
                 total,
                 Optional.of(cellItemId)
         );
+        return new Encoded(record, preview.toList());
     }
 
     public static List<GenericStack> preview(DeepCellContents contents) {
-        var preview = contents.asMap().object2LongEntrySet().stream()
-                .filter(entry -> entry.getLongValue() > 0)
-                .map(entry ->
-                        new GenericStack(entry.getKey(), entry.getLongValue())
-                )
-                .sorted(Comparator.comparingLong(GenericStack::amount).reversed())
-                .collect(Collectors.toCollection(
-                        () -> new ArrayList<>(contents.typeCount())
-                ));
-        if (preview.size() > PREVIEW_SIZE) {
-            preview.subList(PREVIEW_SIZE, preview.size()).clear();
+        var preview = new PreviewCollector();
+        contents.asMap().object2LongEntrySet().forEach(entry ->
+                preview.offer(entry.getKey(), entry.getLongValue())
+        );
+        return preview.toList();
+    }
+
+    /**
+     * Keeps only the largest {@link #PREVIEW_SIZE} entries while scanning, avoiding a full list
+     * allocation and sort for cells with many types.
+     */
+    private static final class PreviewCollector {
+
+        private final AEKey[] keys = new AEKey[PREVIEW_SIZE];
+        private final long[] amounts = new long[PREVIEW_SIZE];
+        private int size;
+
+        void offer(AEKey key, long amount) {
+            if (amount <= 0) {
+                return;
+            }
+
+            if (size < PREVIEW_SIZE) {
+                keys[size] = key;
+                amounts[size] = amount;
+                size++;
+                return;
+            }
+
+            var minIndex = 0;
+            for (var index = 1; index < size; index++) {
+                if (amounts[index] < amounts[minIndex]) {
+                    minIndex = index;
+                }
+            }
+
+            if (amount > amounts[minIndex]) {
+                keys[minIndex] = key;
+                amounts[minIndex] = amount;
+            }
         }
-        return List.copyOf(preview);
+
+        List<GenericStack> toList() {
+            return List.copyOf(
+                    IntStream.range(0, size)
+                            .mapToObj(index -> new GenericStack(keys[index], amounts[index]))
+                            .sorted(Comparator.comparingLong(GenericStack::amount).reversed())
+                            .collect(Collectors.toCollection(() -> new ArrayList<>(size)))
+            );
+        }
+
     }
 
     public record Decoded(
             DeepCellContents contents,
             boolean repaired
+    ) {
+
+    }
+
+    public record Encoded(
+            CellRecord record,
+            List<GenericStack> preview
     ) {
 
     }

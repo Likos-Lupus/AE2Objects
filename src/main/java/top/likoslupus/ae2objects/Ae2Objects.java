@@ -8,8 +8,10 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import top.likoslupus.ae2objects.cell.ui.DeepCellTooltip;
 import top.likoslupus.ae2objects.command.Ae2ObjectsCommand;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Bootstrap;
 import top.likoslupus.ae2objects.integration.ae2.Ae2Integration;
@@ -38,9 +40,13 @@ public final class Ae2Objects {
 
         modEventBus.addListener(Ae2Integration::initCommon);
         modEventBus.addListener(Ae2Integration::registerCapabilities);
+        modEventBus.addListener(DeepCellTooltip::registerTooltipAppender);
         modEventBus.addListener(this::addContentsToCreativeTab);
 
         NeoForge.EVENT_BUS.addListener(Ae2ObjectsCommand::register);
+        NeoForge.EVENT_BUS.addListener((ServerAboutToStartEvent event) ->
+                ServerCellContext.onServerAboutToStart(event.getServer())
+        );
         NeoForge.EVENT_BUS.addListener(this::onServerStarted);
         NeoForge.EVENT_BUS.addListener(this::onServerStopped);
     }

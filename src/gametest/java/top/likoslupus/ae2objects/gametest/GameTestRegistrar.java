@@ -22,6 +22,7 @@ import java.util.function.Consumer;
  * this class is part of the dev mod.</p>
  */
 @EventBusSubscriber(modid = Ae2Objects.MOD_ID)
+@SuppressWarnings("NullableProblems")
 public final class GameTestRegistrar {
 
     private static final int MAX_TICKS = 200;
@@ -32,6 +33,7 @@ public final class GameTestRegistrar {
             new TestCase("capacity_clamp", GameTestFunctions::capacityClamp),
             new TestCase("fluid_capacity_long", GameTestFunctions::fluidCapacityLong),
             new TestCase("uuid_lifecycle", GameTestFunctions::uuidLifecycle),
+            new TestCase("tooltip_lines", GameTestFunctions::tooltipLines),
             new TestCase("persistence_roundtrip", GameTestFunctions::persistenceRoundtrip),
             new TestCase("partition_whitelist", GameTestFunctions::partitionWhitelist),
             new TestCase("partition_blacklist", GameTestFunctions::partitionBlacklist),
@@ -43,7 +45,9 @@ public final class GameTestRegistrar {
             new TestCase("portable_power", GameTestFunctions::portablePower),
             new TestCase("portable_open", GameTestFunctions::portableOpen),
             new TestCase("clone_from_container_menu", GameTestFunctions::cloneFromContainerMenu),
-            new TestCase("recovery", GameTestFunctions::recovery)
+            new TestCase("recovery", GameTestFunctions::recovery),
+            new TestCase("contents_total_tracking", GameTestFunctions::contentsTotalTracking),
+            new TestCase("preview_keeps_top_ten", GameTestFunctions::previewKeepsTopTen)
     );
 
     private GameTestRegistrar() {
@@ -52,7 +56,8 @@ public final class GameTestRegistrar {
     @SubscribeEvent
     public static void registerFunctions(RegisterEvent event) {
         event.register(
-                Registries.TEST_FUNCTION, helper ->
+                Registries.TEST_FUNCTION,
+                helper ->
                         TESTS.forEach(test -> helper.register(
                                 GameTestFunctions.key(test.path()),
                                 test.function()

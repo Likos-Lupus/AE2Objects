@@ -8,10 +8,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 import top.likoslupus.ae2objects.Ae2Objects;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * {@link CellRepository} backed by a world-scoped {@link SavedData}.
@@ -22,20 +19,22 @@ public final class SavedDataCellRepository extends SavedData implements CellRepo
 
     public static final String NAME = "storage_manager";
 
-    public static final Codec<SavedDataCellRepository> CODEC = RecordCodecBuilder.create(instance -> instance
-            .group(
-                    Codec.unboundedMap(UUIDUtil.STRING_CODEC, CellRecord.CODEC)
-                            .fieldOf("cells")
-                            .forGetter(SavedDataCellRepository::cellsForCodec)
-            )
-            .apply(instance, SavedDataCellRepository::new)
-    );
+    public static final Codec<SavedDataCellRepository> CODEC =
+            RecordCodecBuilder.create(instance -> instance
+                    .group(
+                            Codec.unboundedMap(UUIDUtil.STRING_CODEC, CellRecord.CODEC)
+                                    .fieldOf("cells")
+                                    .forGetter(SavedDataCellRepository::cellsForCodec)
+                    )
+                    .apply(instance, SavedDataCellRepository::new)
+            );
 
-    public static final SavedDataType<SavedDataCellRepository> TYPE = new SavedDataType<>(
-            Ae2Objects.id(NAME),
-            SavedDataCellRepository::new,
-            CODEC
-    );
+    public static final SavedDataType<SavedDataCellRepository> TYPE =
+            new SavedDataType<>(
+                    Ae2Objects.id(NAME),
+                    SavedDataCellRepository::new,
+                    CODEC
+            );
 
     private final Map<UUID, CellRecord> cells;
 
@@ -52,7 +51,8 @@ public final class SavedDataCellRepository extends SavedData implements CellRepo
     }
 
     private Map<UUID, CellRecord> cellsForCodec() {
-        return Map.copyOf(cells);
+        // The saved-data codec only reads. Avoid copying the entire cell map on every world save.
+        return Collections.unmodifiableMap(cells);
     }
 
     @Override

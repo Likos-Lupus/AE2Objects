@@ -85,8 +85,7 @@ public final class ModItems {
                                 .getOptional(component.itemId())
                                 .orElse(Items.AIR),
                         housing,
-                        definition,
-                        definition.translationKey()
+                        definition
                 )
         );
         RegisteredCells.put(definition, item);
@@ -106,8 +105,7 @@ public final class ModItems {
                         () -> BuiltInRegistries.ITEM
                                 .getOptional(component.itemId())
                                 .orElse(Items.AIR),
-                        housing,
-                        definition.translationKey()
+                        housing
                 )
         );
         RegisteredCells.put(definition, item);

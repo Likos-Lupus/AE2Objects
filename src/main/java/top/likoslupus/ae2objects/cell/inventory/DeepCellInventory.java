@@ -21,6 +21,7 @@ import top.likoslupus.ae2objects.cell.storage.NestedCellPolicy;
 import top.likoslupus.ae2objects.registry.ModDataComponents;
 
 import java.util.UUID;
+import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -28,6 +29,9 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Owns acceptance, filtering, capacity clamping and the {@code StorageCell} contract only. It
  * holds no item implementation and must not branch on item/fluid/chemical or drive/portable.</p>
+ *
+ * <p>The workbench filter is created lazily: status queries and client rendering must not build
+ * config/upgrade inventories.</p>
  */
 public final class DeepCellInventory implements StorageCell {
 
@@ -36,14 +40,15 @@ public final class DeepCellInventory implements StorageCell {
     private final CellCapacity capacity;
     private final @Nullable ISaveProvider container;
     private final DeepCellSession session;
-    private final DeepCellFilter filter;
+    private final Supplier<DeepCellFilter> filterFactory;
+    private @Nullable DeepCellFilter filter;
 
     public DeepCellInventory(
             CellDefinition definition,
             StorageChannelBinding channel,
             @Nullable ISaveProvider saveProvider,
             DeepCellSession session,
-            DeepCellFilter filter
+            Supplier<DeepCellFilter> filterFactory
     ) {
         this.definition = definition;
         this.channel = channel;
@@ -53,7 +58,7 @@ public final class DeepCellInventory implements StorageCell {
         );
         this.container = saveProvider;
         this.session = session;
-        this.filter = filter;
+        this.filterFactory = filterFactory;
     }
 
     public static boolean hasCellUUID(ItemStack cell) {
@@ -66,24 +71,27 @@ public final class DeepCellInventory implements StorageCell {
     }
 
     public IncludeExclude getPartitionListMode() {
-        return filter.mode();
+        return filter().mode();
+    }
+
+    private DeepCellFilter filter() {
+        if (filter == null) {
+            filter = filterFactory.get();
+        }
+        return filter;
     }
 
     public boolean isPreformatted() {
-        return filter.isPreformatted();
+        return filter().isPreformatted();
     }
 
     public boolean isFuzzy() {
-        return filter.isFuzzy();
+        return filter().isFuzzy();
     }
 
     @Override
     public CellState getStatus() {
-        return statusFor(
-                session.context() == null
-                        ? session.knownStoredAmount()
-                        : session.storedAmount()
-        );
+        return statusFor(session.storedAmount());
     }
 
     private CellState statusFor(long amount) {
@@ -127,11 +135,12 @@ public final class DeepCellInventory implements StorageCell {
 
     @Override
     public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
-        if (amount <= 0
-                || !channel.accepts(what)
-                || !filter.accepts(what)
-                || !NestedCellPolicy.accepts(what)
-        ) {
+        if (amount <= 0 || !channel.accepts(what)) {
+            return 0;
+        }
+
+        var filter = filter();
+        if (!filter.accepts(what) || !NestedCellPolicy.accepts(what)) {
             return 0;
         }
 
@@ -141,16 +150,14 @@ public final class DeepCellInventory implements StorageCell {
         }
 
         if (mode == Actionable.MODULATE) {
-            if (session.context() != null) {
-                session.ensureIdentity();
-            }
+            session.ensureIdentity();
             contents().insert(what, accepted);
             saveChanges();
         }
 
         // Overflow Destruction: report the whole request as handled; the excess is destroyed.
         // If nothing could be stored there is no space at all, so nothing is voided.
-        if (filter.voidOverflow() && accepted > 0) {
+        if (filter.voidOverflow()) {
             return amount;
         }
 

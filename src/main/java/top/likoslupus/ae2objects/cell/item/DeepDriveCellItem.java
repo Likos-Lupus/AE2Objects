@@ -7,8 +7,6 @@ import appeng.api.upgrades.IUpgradeInventory;
 import appeng.hooks.AEToolItem;
 import appeng.util.ConfigInventory;
 import appeng.util.InteractionUtil;
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -17,8 +15,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
@@ -30,9 +26,7 @@ import top.likoslupus.ae2objects.cell.ui.DeepCellTooltip;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.ModDataComponents;
 
-import java.util.ArrayList;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 
@@ -45,20 +39,17 @@ public final class DeepDriveCellItem extends Item
     private final CellDefinition definition;
     private final Supplier<? extends ItemLike> coreItem;
     private final Supplier<? extends ItemLike> housingItem;
-    private final String familyTranslationKey;
 
     public DeepDriveCellItem(
             ResourceKey<Item> id,
             Supplier<? extends ItemLike> coreItem,
             Supplier<? extends ItemLike> housingItem,
-            CellDefinition definition,
-            String familyTranslationKey
+            CellDefinition definition
     ) {
         super(properties(id, definition));
         this.coreItem = coreItem;
         this.housingItem = housingItem;
         this.definition = definition;
-        this.familyTranslationKey = familyTranslationKey;
     }
 
     private static Properties properties(ResourceKey<Item> id, CellDefinition definition) {
@@ -151,7 +142,7 @@ public final class DeepDriveCellItem extends Item
         }
 
         var cellId = CellStackData.cellId(stack);
-        var context = ServerCellContext.getOrNull();
+        var context = ServerCellContext.getForCurrentThread();
         if (cellId != null && context != null) {
             context.repository().remove(cellId);
         }
@@ -169,25 +160,6 @@ public final class DeepDriveCellItem extends Item
     @Override
     public IUpgradeInventory getUpgrades(ItemStack stack) {
         return CellWorkbenchSupport.upgrades(stack, definition);
-    }
-
-    // FIXME: Overrides deprecated method in 'net.minecraft.world.item.Item'
-    @Override
-    public void appendHoverText(
-            ItemStack stack,
-            TooltipContext context,
-            TooltipDisplay display,
-            Consumer<Component> tooltip,
-            TooltipFlag tooltipFlag
-    ) {
-        tooltip.accept(Component
-                .translatable(familyTranslationKey)
-                .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC)
-        );
-
-        var lines = new ArrayList<Component>();
-        DeepCellTooltip.addCellInformation(stack, lines);
-        lines.forEach(tooltip);
     }
 
     @Override

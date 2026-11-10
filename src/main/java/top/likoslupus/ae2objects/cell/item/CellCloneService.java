@@ -8,13 +8,15 @@ import top.likoslupus.ae2objects.cell.stack.CellStackData;
 import top.likoslupus.ae2objects.platform.ServerCellContext;
 import top.likoslupus.ae2objects.registry.ModDataComponents;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
  * Creates an independent copy of a deep cell (fresh UUID + deep copy of the stored contents).
  *
- * <p>On the client there is no authoritative repository, so the copy is left without an invented
- * UUID and the server performs the real clone.</p>
+ * <p>On the client there is no authoritative repository. The client-side prediction still gets a
+ * fresh UUID and a cleared summary/preview, matching the pre-refactor behaviour; the server then
+ * creates the authoritative independent record.</p>
  */
 public final class CellCloneService {
 
@@ -30,8 +32,13 @@ public final class CellCloneService {
             return copy;
         }
 
-        var context = ServerCellContext.getOrNull();
+        var context = ServerCellContext.getForCurrentThread();
         if (context == null) {
+            // Client-side prediction (or a clone before the server context exists): never touch
+            // the server repository, but do not let the copy share the original UUID either.
+            copy.set(ModDataComponents.CELL_ID.get(), UUID.randomUUID());
+            CellStackData.updateSummary(copy, 0L, 0);
+            CellStackData.updatePreview(copy, List.of());
             return copy;
         }
 

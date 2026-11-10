@@ -71,7 +71,7 @@ public final class Ae2ObjectsCommand {
             UUID uuid
     ) throws CommandSyntaxException {
         var player = context.getSource().getPlayerOrException();
-        var serverContext = ServerCellContext.getOrNull();
+        var serverContext = ServerCellContext.getForCurrentThread();
         if (serverContext == null) {
             context.getSource().sendFailure(
                     Component.translatable("command.ae2objects.recover_fail", uuid)
@@ -112,7 +112,9 @@ public final class Ae2ObjectsCommand {
                     CellContentsCodec.preview(decoded.contents())
             );
         }
-        player.addItem(stack);
+        if (!player.addItem(stack)) {
+            player.drop(stack, false);
+        }
 
         context.getSource().sendSuccess(
                 () -> Component.translatable(

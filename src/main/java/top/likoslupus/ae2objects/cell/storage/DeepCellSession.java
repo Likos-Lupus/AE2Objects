@@ -21,24 +21,25 @@ import static java.util.Objects.requireNonNull;
  * <p>Owns the UUID, lazy loading, the dirty flag, repository access and the published ItemStack
  * snapshot. It deliberately knows nothing about partitioning, fuzzy mode, capacity limits or the
  * AE2 {@code StorageCell} interface.</p>
+ *
+ * <p>The server context is resolved lazily for the current thread. This keeps client-side
+ * inventories on the lightweight item summary/preview path and avoids cross-thread access to the
+ * world repository in single-player.</p>
  */
 public final class DeepCellSession {
 
     private final ItemStack stack;
     private final CellDefinition definition;
-    private final @Nullable ServerCellContext context;
 
     private @Nullable DeepCellContents contents;
     private boolean dirty;
 
     public DeepCellSession(
             ItemStack stack,
-            CellDefinition definition,
-            @Nullable ServerCellContext context
+            CellDefinition definition
     ) {
         this.stack = stack;
         this.definition = definition;
-        this.context = context;
         this.dirty = false;
     }
 
@@ -50,10 +51,6 @@ public final class DeepCellSession {
         return definition;
     }
 
-    public @Nullable ServerCellContext context() {
-        return context;
-    }
-
     public boolean hasIdentity() {
         return cellId() != null;
     }
@@ -62,29 +59,69 @@ public final class DeepCellSession {
         return CellStackData.cellId(stack);
     }
 
+    /**
+     * Total stored amount without forcing a full key decode when possible.
+     *
+     * <p>Loaded contents use their incrementally maintained total. On the server, an unloaded cell
+     * reads the persisted record total. On the client, the synchronized item summary is used.</p>
+     */
+    public long storedAmount() {
+        var context = ServerCellContext.getForCurrentThread();
+        if (context == null) {
+            return knownStoredAmount();
+        }
+
+        if (contents != null) {
+            return contents.totalAmount();
+        }
+
+        var id = cellId();
+        if (id == null) {
+            return 0L;
+        }
+
+        return context.repository().find(id)
+                .map(CellRecord::storedAmount)
+                .orElse(0L);
+    }
+
     /** Cached summary stored on the item; cheap and always available, even on the client. */
     public long knownStoredAmount() {
         return CellStackData.storedAmount(stack);
+    }
+
+    public int storedTypes() {
+        var context = ServerCellContext.getForCurrentThread();
+        return context == null
+                ? knownStoredTypes()
+                : contents().typeCount();
     }
 
     public int knownStoredTypes() {
         return CellStackData.storedTypes(stack);
     }
 
-    public long storedAmount() {
-        return contents().totalAmount();
-    }
-
     public DeepCellContents contents() {
-        if (contents == null) {
-            contents = loadContents();
+        if (contents != null) {
+            return contents;
         }
+
+        var loaded = loadContents();
+        if (loaded == null) {
+            // Server thread, but the server context is not available yet (e.g. very early
+            // lifecycle). Do not cache a preview here; retry once the context exists.
+            return new DeepCellContents();
+        }
+        contents = loaded;
         return contents;
     }
 
-    private DeepCellContents loadContents() {
+    private @Nullable DeepCellContents loadContents() {
+        var context = ServerCellContext.getForCurrentThread();
         if (context == null) {
-            return DeepCellContents.fromPreview(stack, keyType());
+            return ServerCellContext.isServerThread()
+                    ? null
+                    : DeepCellContents.fromPreview(stack, keyType());
         }
 
         var id = cellId();
@@ -112,10 +149,6 @@ public final class DeepCellSession {
         return StorageChannelRegistry.INSTANCE.require(definition.type()).keyType();
     }
 
-    public int storedTypes() {
-        return contents().typeCount();
-    }
-
     public void markDirty() {
         dirty = true;
     }
@@ -125,6 +158,7 @@ public final class DeepCellSession {
     }
 
     public void persist() {
+        var context = ServerCellContext.getForCurrentThread();
         if (!dirty || context == null) {
             return;
         }
@@ -135,28 +169,33 @@ public final class DeepCellSession {
             return;
         }
 
-        ensureIdentity();
+        if (!ensureIdentity()) {
+            return;
+        }
+
         var id = requireNonNull(cellId());
-        var record = CellContentsCodec.encode(
+        var encoded = CellContentsCodec.encodeWithPreview(
                 current,
                 context.registries(),
                 CellStackData.registeredItemId(stack)
         );
+        var record = encoded.record();
         context.repository().put(id, record);
         CellStackData.updateSummary(
                 stack,
-                current.totalAmount(),
-                current.typeCount()
+                record.storedAmount(),
+                record.storedTypesCount()
         );
         CellStackData.updatePreview(
                 stack,
-                CellContentsCodec.preview(current)
+                encoded.preview()
         );
         dirty = false;
     }
 
     public void clearIdentity() {
         var id = cellId();
+        var context = ServerCellContext.getForCurrentThread();
         if (id != null && context != null) {
             context.repository().remove(id);
         }
@@ -165,15 +204,14 @@ public final class DeepCellSession {
         dirty = false;
     }
 
-    public void ensureIdentity() {
+    public boolean ensureIdentity() {
         if (cellId() != null) {
-            return;
+            return true;
         }
 
+        var context = ServerCellContext.getForCurrentThread();
         if (context == null) {
-            throw new IllegalStateException(
-                    "Cannot allocate a deep-cell UUID without server storage"
-            );
+            return false;
         }
 
         var id = UUID.randomUUID();
@@ -182,6 +220,7 @@ public final class DeepCellSession {
                 id,
                 CellRecord.empty(CellStackData.registeredItemId(stack))
         );
+        return true;
     }
 
 }

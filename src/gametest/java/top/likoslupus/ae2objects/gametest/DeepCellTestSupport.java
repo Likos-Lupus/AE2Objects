@@ -4,8 +4,6 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.StorageCells;
 import appeng.api.storage.cells.StorageCell;
-import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import top.likoslupus.ae2objects.cell.model.CellContentType;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
@@ -49,35 +47,10 @@ final class DeepCellTestSupport {
         return inventory;
     }
 
-    static void assertAmount(
-            GameTestHelper helper,
-            StorageCell inventory,
-            AEKey key,
-            long expected,
-            String message
-    ) {
-        var actual = stored(inventory, key);
-        assertTrue(
-                helper,
-                actual == expected,
-                message + " (expected " + expected + ", got " + actual + ")"
-        );
-    }
-
     static long stored(StorageCell inventory, AEKey key) {
         var counter = new KeyCounter();
         inventory.getAvailableStacks(counter);
         return counter.get(key);
-    }
-
-    static void assertTrue(
-            GameTestHelper helper,
-            boolean condition,
-            String message
-    ) {
-        if (!condition) {
-            throw helper.assertionException(Component.literal(message));
-        }
     }
 
 }
