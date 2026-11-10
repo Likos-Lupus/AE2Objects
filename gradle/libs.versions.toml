@@ -3,7 +3,7 @@ mod = "0.1.0"
 
 minecraft = "26.1.2"
 neoforge = "26.1.2.98"
-moddev = "2.0.144"
+moddev = "2.0.148"
 
 ae2 = "26.1.10-beta"
 
