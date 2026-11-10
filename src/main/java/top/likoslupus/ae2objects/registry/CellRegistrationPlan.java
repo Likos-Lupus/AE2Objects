@@ -3,6 +3,7 @@ package top.likoslupus.ae2objects.registry;
 import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
 import top.likoslupus.ae2objects.cell.model.CellContentType;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
+import top.likoslupus.ae2objects.cell.model.CellTier;
 import top.likoslupus.ae2objects.cell.model.DeepCellCatalog;
 import top.likoslupus.ae2objects.platform.IntegrationSet;
 
@@ -28,6 +29,11 @@ public final class CellRegistrationPlan {
     }
 
     private static boolean isActive(CellDefinition definition) {
+        // TODO: MEGA Cells 26.1 可用后再恢复 1m-256m 等级。
+        if (CellTier.megaTiers().contains(definition.tier())) {
+            return false;
+        }
+
         // Chemical cells exist only once the Applied Mekanistics chemical channel is registered.
         return definition.type() != CellContentType.CHEMICAL
                 || StorageChannelRegistry.INSTANCE.isAvailable(CellContentType.CHEMICAL);
