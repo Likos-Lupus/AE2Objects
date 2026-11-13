@@ -5,12 +5,12 @@ mod is named explicitly.
 
 Tier placeholders used below: `1k`, `4k`, `16k`, `64k`, `256k`, `1m`, `4m`, `16m`, `64m`, `256m`.
 
-- **Shipped:** item + fluid drive cells (`1k`–`256m`), portable item + fluid cells, and all three
-  housings. MEGA-tier cells (`1m`–`256m`) are always registered, but only craftable when MEGA Cells
-  is loaded.
-- **Ready-but-inactive:** chemical cells. They are described here as the target design; at runtime
-  they activate only once the Applied Mekanistics chemical channel exists (no 26.1 appmek build
-  yet).
+- **Catalog:** 60 definitions (3 key types × 10 tiers × 2 forms), listed below as the target design.
+- **Shipped in 0.2.1:** item + fluid drive and portable cells for `1k`–`256k`, plus all three
+  housings, on Minecraft 26.1.2 / 26.2 / 26.3.
+- **Catalog-only / inactive:** MEGA-tier cells (`1m`–`256m`) are not registered or craftable until a
+  MEGA Cells 26.x build exists. Chemical cells activate only once the Applied Mekanistics chemical
+  channel exists (no 26.x appmek build yet).
 
 ## 1. Housings
 
@@ -25,7 +25,8 @@ portable cells, an energy cell and chest).
 
 ## 2. Non-portable storage cells
 
-These go into ME Drives and ME Chests. 30 cells total (3 key types × 10 tiers).
+These go into ME Drives and ME Chests. The catalog contains 30 definitions (3 key types × 10 tiers);
+10 item/fluid definitions are registered at present (`1k`–`256k`).
 
 ### 2.1 Item deep cells
 
@@ -83,7 +84,8 @@ rejected on insert.
 ## 3. Portable storage cells
 
 Portable cells act like a pocket ME Chest and can be charged. They use the ID pattern
-`deep_portable_<type>_cell_<tier>`. 30 cells total.
+`deep_portable_<type>_cell_<tier>`. The catalog contains 30 definitions; 10 item/fluid definitions
+are registered at present (`1k`–`256k`).
 
 | Type     | ID pattern                           |
 |----------|--------------------------------------|
@@ -121,8 +123,8 @@ All content is added to AE2's main creative tab (`AECreativeTabIds.MAIN`):
 1. `deep_item_cell_housing`
 2. `deep_fluid_cell_housing`
 3. `deep_chemical_cell_housing`
-4. All non-portable deep cells (30)
-5. All portable deep cells (30)
+4. All active non-portable deep cells (10 at present)
+5. All active portable deep cells (10 at present)
 
 ## 6. Upgrade support matrix
 

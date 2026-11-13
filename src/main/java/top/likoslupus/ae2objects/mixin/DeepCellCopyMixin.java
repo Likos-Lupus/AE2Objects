@@ -1,3 +1,4 @@
+//? if <26.2 {
 package top.likoslupus.ae2objects.mixin;
 
 import net.minecraft.core.NonNullList;
@@ -60,3 +61,4 @@ public abstract class DeepCellCopyMixin {
     public abstract void setCarried(ItemStack carried);
 
 }
+//?}

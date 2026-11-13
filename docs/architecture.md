@@ -45,7 +45,7 @@ redesigning AE2's partition/upgrade/menu behavior.
 | `...data`                   | Data generation: recipes, MEGA conditional recipes, GameTest structures.                                                                                   |
 | `...command`                | `/ae2objects` commands.                                                                                                                                    |
 | `...client`                 | Client-only bootstrap.                                                                                                                                     |
-| `...mixin`                  | Container-copy hook for independent UUID cloning.                                                                                                          |
+| `...mixin`                  | Version-specific clone hooks: `AbstractContainerMenu` on 26.1.2, `Slot.safeClone` on 26.2+.                                                                |
 | `gametest` source set       | `GameTestRegistrar`, `GameTestFunctions`, `DeepCellTestSupport` (dev-only; not shipped).                                                                   |
 
 > **Note:** the package is `registry`, not `content`. An earlier draft of the implementation plan
@@ -262,8 +262,8 @@ public record CellStackSnapshot(
 `CellStackData` is the **sole owner** of the ItemStack data-component contract; `CellView` holds
 pure status/capacity projections; `DeepCellTooltip` reads only the snapshot + workbench state and
 never constructs a storage inventory. It is registered through
-`RegisterTooltipAppendersEvent` at `TooltipLocation.POST_CUSTOM`, so the item classes do not need
-to override the deprecated `Item#appendHoverText`. See §9 for the component table.
+`RegisterTooltipAppendersEvent` at `TooltipLocation.POST_CUSTOM`, so the item classes do not need to
+override the deprecated `Item#appendHoverText`. See §9 for the component table.
 
 ## 8. Item layer
 
@@ -291,8 +291,9 @@ to override the deprecated `Item#appendHoverText`. See §9 for the component tab
 ## 10. Registration and content
 
 - `DeepCellCatalog` = the 60 product definitions.
-- `CellRegistrationPlan` selects the active subset: item + fluid (including MEGA tiers) are always
-  active; chemical is active only once a chemical `StorageChannelBinding` exists.
+- `CellRegistrationPlan` selects the active subset: item + fluid `1k`–`256k` are active; MEGA tiers
+  are filtered while MEGA Cells has no 26.x build; chemical is active only once a chemical
+  `StorageChannelBinding` exists.
 - `RegisteredCells` = `Map<CellDefinition, DeferredItem<?>>` (the registry handle only).
 - `RegisteredHousings` = `Map<CellContentType, DeferredItem<Item>>`.
 - `CellComponentSources.forTier(tier)` = the tier's storage component:
@@ -325,8 +326,9 @@ flowchart LR
     Core -. " delegate if loaded " .-> IAM
 ```
 
-- **MEGA Cells** only affects the **component source** and the **recipe condition**. MEGA-tier cells
-  are always registered (stable IDs); only their recipes are gated by `neoforge:mod_loaded`.
+- **MEGA Cells** affects the **component source** and the **recipe condition**. While no 26.x build
+  exists, `CellRegistrationPlan` filters the MEGA tiers out of registration; the catalog IDs remain
+  stable for a future re-enable.
 - **Applied Mekanistics** is a mod-id-gated skeleton (`AppMekIntegration`) that reserves the
   chemical channel + portable menu. It references no appmek/Mekanism class. `CellRegistrationPlan`
   activates chemical content automatically once the channel is registered.

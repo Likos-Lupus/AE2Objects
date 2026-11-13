@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import top.likoslupus.ae2objects.Ae2Objects;
 import top.likoslupus.ae2objects.cell.channel.StorageChannelRegistry;
+import top.likoslupus.ae2objects.cell.item.CellItemOutput;
 import top.likoslupus.ae2objects.cell.item.DeepCellDefinitionProvider;
 import top.likoslupus.ae2objects.cell.model.CellContentType;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
@@ -113,7 +114,7 @@ public final class Ae2ObjectsCommand {
             );
         }
         if (!player.addItem(stack)) {
-            player.drop(stack, false);
+            CellItemOutput.drop(player, stack);
         }
 
         context.getSource().sendSuccess(

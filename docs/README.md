@@ -4,12 +4,11 @@ AE2Objects adds **Deep Storage Cells**
 to [Applied Energistics 2](https://github.com/AppliedEnergistics/Applied-Energistics-2):
 storage cells with **no type limit** and a large, simple byte-based capacity.
 
-The mod now ships the full product matrix:
+The mod's catalog model covers the full product matrix; the currently registered subset is:
 
-- **Items** and **vanilla AE2 fluids** (`AEFluidKey`)
-- MEGA Cells tier sizes `1M`–`256M`
-- Drive **and portable** forms of every tier
-- **Applied Mekanistics** chemicals as a ready-but-inactive seam (no appmek build for 26.1 yet)
+- **Items** and **vanilla AE2 fluids** (`AEFluidKey`), drive **and portable**, `1k`–`256k`
+- MEGA Cells tier sizes `1M`–`256M` defined in the catalog, disabled until a MEGA Cells 26.x build
+- **Applied Mekanistics** chemicals as a ready-but-inactive seam (no 26.x appmek build yet)
 
 ## Documentation map
 
@@ -37,9 +36,9 @@ The mod now ships the full product matrix:
 
 ## Status
 
-- **Shipped:** item + fluid drive cells (`1k`–`256m`), portable item + fluid cells, housings, MEGA
-  tier sizes, GameTests.
-- **Ready-but-inactive:** chemical cells. Applied Mekanistics has no 26.1 build yet, so the chemical
+- **Shipped:** item + fluid drive cells (`1k`–`256k`), portable item + fluid cells, housings,
+  GameTests, on Minecraft 26.1.2 / 26.2 / 26.3.
+- **Ready-but-inactive:** chemical cells. Applied Mekanistics has no 26.x build yet, so the chemical
   channel/housing/models are placeholders (dormant) and no chemical recipes are emitted.
-- **Placeholders:** MEGA-tier item/drive models reuse the `256k` art until MEGA Cells ships a 26.1
-  build.
+- **Catalog-only:** MEGA-tier `1m`–`256m` cells are defined but not registered or craftable until
+  MEGA Cells ships a 26.x build.

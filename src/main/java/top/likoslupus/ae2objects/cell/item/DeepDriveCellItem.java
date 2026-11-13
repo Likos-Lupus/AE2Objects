@@ -148,12 +148,12 @@ public final class DeepDriveCellItem extends Item
         }
 
         playerInventory.setItem(playerInventory.getSelectedSlot(), ItemStack.EMPTY);
-        playerInventory.placeItemBackInInventory(new ItemStack(coreItem.get()));
+        CellItemOutput.giveBack(playerInventory, new ItemStack(coreItem.get()));
 
         var upgrades = getUpgrades(stack);
-        upgrades.forEach(playerInventory::placeItemBackInInventory);
+        upgrades.forEach(upgrade -> CellItemOutput.giveBack(playerInventory, upgrade));
 
-        playerInventory.placeItemBackInInventory(new ItemStack(housingItem.get()));
+        CellItemOutput.giveBack(playerInventory, new ItemStack(housingItem.get()));
         return true;
     }
 

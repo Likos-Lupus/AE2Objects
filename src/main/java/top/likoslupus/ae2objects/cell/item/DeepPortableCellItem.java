@@ -138,11 +138,12 @@ public final class DeepPortableCellItem extends AbstractPortableCell
         }
 
         playerInventory.setItem(playerInventory.getSelectedSlot(), ItemStack.EMPTY);
-        playerInventory.placeItemBackInInventory(new ItemStack(coreItem.get()));
-        getUpgrades(stack).forEach(playerInventory::placeItemBackInInventory);
-        playerInventory.placeItemBackInInventory(new ItemStack(housingItem.get()));
-        playerInventory.placeItemBackInInventory(energyCellStack);
-        playerInventory.placeItemBackInInventory(new ItemStack(AEBlocks.ME_CHEST.asItem()));
+        CellItemOutput.giveBack(playerInventory, new ItemStack(coreItem.get()));
+        getUpgrades(stack).forEach(upgrade -> CellItemOutput.giveBack(playerInventory, upgrade));
+        CellItemOutput.giveBack(playerInventory, new ItemStack(housingItem.get()));
+        CellItemOutput.giveBack(playerInventory, energyCellStack);
+        CellItemOutput.giveBack(playerInventory, new ItemStack(AEBlocks.ME_CHEST.asItem()));
+
         return true;
     }
 

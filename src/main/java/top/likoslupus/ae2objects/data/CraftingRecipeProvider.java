@@ -9,6 +9,11 @@ import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+//? if 26.3 {
+/*import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.data.worldgen.BootstrapContext;
+*///?}
 import net.neoforged.neoforge.common.Tags;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
 import top.likoslupus.ae2objects.cell.model.CellTier;
@@ -20,12 +25,21 @@ import java.util.concurrent.CompletableFuture;
 
 public final class CraftingRecipeProvider extends RecipeProvider {
 
+    //? if 26.3 {
+    /*public CraftingRecipeProvider(
+            BootstrapContext<Recipe<?>> recipes,
+            BootstrapContext<Advancement> advancements
+    ) {
+        super(recipes, advancements);
+    }
+    *///?} else {
     public CraftingRecipeProvider(
             HolderLookup.Provider registries,
             RecipeOutput output
     ) {
         super(registries, output);
     }
+    //?}
 
     @Override
     protected void buildRecipes() {
@@ -116,6 +130,7 @@ public final class CraftingRecipeProvider extends RecipeProvider {
                 .orElse(Items.AIR);
     }
 
+    //? if <26.3 {
     public static final class Runner extends RecipeProvider.Runner {
 
         public Runner(
@@ -139,5 +154,6 @@ public final class CraftingRecipeProvider extends RecipeProvider {
         }
 
     }
+    //?}
 
 }

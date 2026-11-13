@@ -6,7 +6,7 @@ license = "LGPL-3.0"
 modId = "ae2objects"
 version = "${version}"
 displayName = "AE2Objects"
-logoFile = "icon.png"
+${modIconKey} = "icon.png"
 credits = "Based on AE2Things by ProjectET and Technici4n."
 authors = "Likos-Lupus, Chiloven945"
 description = '''
@@ -14,32 +14,32 @@ Adds Deep Storage Cells to Applied Energistics 2.
 '''
 
 [[mixins]]
-config = "ae2objects.mixins.json"
+config = "${mixinConfig}"
 
 [[dependencies.ae2objects]]
 modId = "neoforge"
 type = "required"
-versionRange = "[26.1.2.71,)"
+versionRange = "${neoforgeRange}"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.ae2objects]]
 modId = "minecraft"
 type = "required"
-versionRange = "[26.1.2, 26.2.0)"
+versionRange = "${minecraftRange}"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.ae2objects]]
 modId = "ae2"
 type = "required"
-versionRange = "[26.1.10-beta, 26.2.0)"
+versionRange = "${ae2Range}"
 ordering = "AFTER"
 side = "BOTH"
 
-# Optional MEGA Cells integration: only enables the 1m-256m recipes (component source + conditional
-# recipes). No MEGA Java API is used.
-# TODO: tighten the version range once a MEGA Cells 26.1 release exists.
+# Optional MEGA Cells integration: reserved for the 1m-256m tiers (component source + conditional
+# recipes). Registration and recipes stay disabled until a MEGA Cells 26.x build exists.
+# No MEGA Java API is used.
 [[dependencies.ae2objects]]
 modId = "megacells"
 type = "optional"
@@ -48,7 +48,7 @@ ordering = "AFTER"
 side = "BOTH"
 
 # Optional Applied Mekanistics (Mekanism chemicals) integration. Skeleton only: the chemical
-# channel and recipes are deferred until an appmek 26.1 build exists.
+# channel and recipes are deferred until an appmek 26.x build exists.
 # TODO: register ChemicalChannelBinding + appmek:portable_chemical_cell, then enable chemical recipes.
 [[dependencies.ae2objects]]
 modId = "appmek"

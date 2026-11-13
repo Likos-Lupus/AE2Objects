@@ -37,15 +37,14 @@ those tier *sizes* with its own deep cells, using MEGA's storage components in t
 `1M = 1,048,576` bytes. AE2Objects uses decimal: `1M = 1,000,000` bytes. The names match; the exact
 byte counts intentionally do not. See the appendix in [`values.md`](values.md).
 
-MEGA-tier deep cells are always **registered** (stable IDs) but only **craftable** when MEGA Cells
-is loaded, because the recipes reference `megacells:cell_component_*`.
+MEGA-tier deep cells are **catalog-only** while MEGA Cells has no 26.x build: their IDs and models
+are defined, but `CellRegistrationPlan` filters the `1m`–`256m` tiers out of registration and no
+recipes are emitted. The IDs remain stable so they can be enabled later.
 
-**Status (26.1.2).** MEGA Cells has no 26.1.2 release yet, so this integration is implemented
-id-only: the MEGA-tier recipes are emitted as raw, condition-gated JSON by `MegaRecipeProvider`
-(the recipe builders cannot be used while `megacells:*` is absent from the classpath), and the
-MEGA-tier item/drive models are placeholders that reuse the `256k` art. **TODO:** switch to
-builder-based recipes and real MEGA-tier models once MEGA Cells ships a 26.1 build, then verify
-in-game.
+**Status (0.2.1 / 26.x).** MEGA Cells has no 26.x release yet (latest is still for 1.21.1), so this
+integration is deferred. `MegaRecipeProvider` and the conditional recipe path remain in the source
+for the future, but are disabled. **TODO:** once a MEGA Cells 26.x build exists, remove the tier
+filter, switch to builder-based recipes where possible, and verify the MEGA-tier models in-game.
 
 ## 3. Applied Mekanistics (optional)
 
@@ -61,13 +60,13 @@ chemicals over AE2 via `me.ramidzkh.mekae2`. AE2Objects adds deep chemical cells
 | Content validator     | `mekanism.api.chemical.attribute.ChemicalAttributeValidator.DEFAULT` |
 | Deep chemical housing | `ae2objects:deep_chemical_cell_housing`                              |
 
-**Status (26.1.2).** Applied Mekanistics has no 26.1 build yet (latest `1.6.3`, NeoForge 1.21.1), so
-only the integration **skeleton** is in place: `integration/appmek/AppMekIntegration` reserves the
-seam (gated by mod id), placeholder chemical resources exist, and `CellRegistrationPlan` activates
-chemical content only once the chemical channel is registered. **TODO:** once appmek ships a 26.1
-build, resolve `MekanismKeyType.TYPE`, register the chemical `StorageChannelBinding` and
-`appmek:portable_chemical_cell`, enforce the radioactive check, emit chemical recipes, and replace
-the placeholder models.
+**Status (0.2.1 / 26.x).** Applied Mekanistics has no 26.x build yet (latest `1.6.3`, NeoForge
+1.21.1), so only the integration **skeleton** is in place:
+`integration/appmek/AppMekIntegration` reserves the seam (gated by mod id), placeholder chemical
+resources exist, and `CellRegistrationPlan` activates chemical content only once the chemical
+channel is registered. **TODO:** once appmek ships a 26.x build, resolve `MekanismKeyType.TYPE`,
+register the chemical `StorageChannelBinding` and `appmek:portable_chemical_cell`, enforce the
+radioactive check, emit chemical recipes, and replace the placeholder models.
 
 Reference appmek item IDs (used for recipes / interop):
 
@@ -82,8 +81,11 @@ Reference appmek item IDs (used for recipes / interop):
 **Chemical validation.** Deep chemical cells reject invalid chemicals on insert:
 
 ```java
-requestedAddition instanceof MekanismKey key
-        && ChemicalAttributeValidator.DEFAULT.process(key.getStack())
+requestedAddition instanceof
+MekanismKey key
+        &&ChemicalAttributeValidator.DEFAULT.
+
+process(key.getStack())
 ```
 
 The `amountPerByte` for `MekanismKeyType.TYPE` is taken to be `1000`, consistent with fluids and
@@ -142,7 +144,7 @@ flowchart LR
 [[dependencies.ae2objects]]
 modId = "ae2"
 type = "required"
-versionRange = "[26.1.10-beta, 26.2.0)"
+versionRange = "[26.3.1-alpha, 26.4)"
 ordering = "AFTER"
 side = "BOTH"
 

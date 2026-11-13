@@ -18,7 +18,7 @@ limit while maintaining balanced byte-based mechanics.
 - **Item and fluid** deep cells, available as **drive** cells or **portable** (pocket ME Chest)
   cells.
 - **Five shipped capacity tiers** — `1k`, `4k`, `16k`, `64k`, `256k`. The planned `1m`–`256m`
-  tiers mirror **MEGA Cells** sizes and are temporarily disabled until a MEGA Cells 26.1 build
+  tiers mirror **MEGA Cells** sizes and are temporarily disabled until a MEGA Cells 26.x build
   exists.
 - **Full AE2 integration** — works with ME Drives, ME Chests, the Cell Workbench, partitioning,
   Fuzzy Cards, Inverter Cards and the Overflow Destruction Card. Portable cells also accept Energy
@@ -31,8 +31,8 @@ limit while maintaining balanced byte-based mechanics.
 ## Optional Integrations
 
 - **[MEGA Cells](https://github.com/62832/MEGACells)** — the `1m`–`256m` tiers are defined in the
-  catalog but are not registered and have no recipes in `0.2.0`. They will be re-enabled once a MEGA
-  Cells 26.1 build is available.
+  catalog but are not registered and have no recipes in `0.2.1`. They will be re-enabled once a MEGA
+  Cells 26.x build is available.
 - **[Applied Mekanistics](https://github.com/ramidzkh/Applied-Mekanistics)** — chemical deep cells
   are designed and reserved, but stay inactive until Applied Mekanistics ships a build for this
   Minecraft version.
@@ -54,10 +54,21 @@ AE2Objects includes administrative commands for inspecting and recovering deep s
 | `/ae2objects getuuid`        | All Players  | Gets the UUID of the deep storage cell in hand and copies it to the clipboard. |
 | `/ae2objects recover <UUID>` | Level 2 (OP) | Reconstructs and gives a storage cell corresponding to the specified UUID.     |
 
+## Supported Versions
+
+| Minecraft | NeoForge     | Applied Energistics 2 | Status                 |
+|-----------|--------------|-----------------------|------------------------|
+| `26.1.2`  | `26.1.2.98`  | `26.1.10-beta`        | Main supported version |
+| `26.2`    | `26.2.0.93`  | `26.2.1-alpha`        | Compatibility build    |
+| `26.3`    | `26.3.0.102` | `26.3.1-alpha`        | Current release line   |
+
+The `26.2` and `26.3` builds use AE2 alpha releases. MEGA Cells and Applied Mekanistics do not yet
+have 26.x builds, so their optional content remains disabled on all three versions.
+
 ## Building from Source
 
 The project uses [Stonecutter](https://github.com/kikugie/stonecutter) for multi-version builds.
-Only Minecraft `26.1.2` is registered today.
+Minecraft `26.1.2`, `26.2` and `26.3` are registered.
 
 Build and collect every registered version:
 
@@ -81,14 +92,20 @@ build/libs/
 - Default (dirty) build: `ae2objects-<modVersion>-<commit>+<mcVersion>.jar`
 - Release build (`./gradlew :26.1.2:releaseJar`): `ae2objects-<modVersion>+<mcVersion>.jar`
 
+Replace `26.1.2` with `26.2` or `26.3` for the other versioned projects.
+
 ### Development Runs
 
-The versioned project is `:26.1.2`.
+The versioned projects are `:26.1.2`, `:26.2` and `:26.3`.
 
 - **Client**: `./gradlew :26.1.2:runClient`
 - **Dedicated Server**: `./gradlew :26.1.2:runServer`
 - **Data Generation**: `./gradlew :26.1.2:runServerData`
-- **Game Tests**: `./gradlew gameTestActive`
+- **Game Tests**: `./gradlew :26.1.2:runGameTestServer` (or `gameTestActive` for the active version)
+
+Do not run `:26.3:runServerData` against `src/generated/resources`: 26.3 writes the newer recipe and
+advancement format. Its output is isolated under `build/generated-data/26.3`, while the canonical
+generated data is produced by 26.1.2 or 26.2.
 
 ## Documentation
 

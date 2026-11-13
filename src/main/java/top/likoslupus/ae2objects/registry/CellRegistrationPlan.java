@@ -13,8 +13,8 @@ import java.util.List;
  * Decides which catalog definitions are active in the current environment.
  *
  * <p>The catalog always describes the full product model; this plan selects the subset to
- * register. Item and fluid cells (including MEGA tiers) are always registered; only the MEGA
- * recipes are gated on the MEGA mod. Chemical content is activated by the Applied Mekanistics
+ * register. Item and fluid cells in the AE2 tiers are registered; MEGA tiers stay catalog-only
+ * until a MEGA Cells 26.x build exists. Chemical content is activated by the Applied Mekanistics
  * integration.</p>
  */
 public final class CellRegistrationPlan {
@@ -29,7 +29,7 @@ public final class CellRegistrationPlan {
     }
 
     private static boolean isActive(CellDefinition definition) {
-        // TODO: MEGA Cells 26.1 可用后再恢复 1m-256m 等级。
+        // TODO: MEGA Cells 26.x 可用后再恢复 1m-256m 等级。
         if (CellTier.megaTiers().contains(definition.tier())) {
             return false;
         }

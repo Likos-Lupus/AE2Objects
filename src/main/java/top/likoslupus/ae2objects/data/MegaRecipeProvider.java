@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  * time, so the recipe builders cannot be used. These recipes reference the components by id and
  * only load when the MEGA mod is present.</p>
  *
- * <p>TODO: replace with builder-based recipes once MEGA 26.1 is available on the datagen
+ * <p>TODO: replace with builder-based recipes once MEGA 26.x is available on the datagen
  * classpath.</p>
  */
 public final class MegaRecipeProvider implements DataProvider {

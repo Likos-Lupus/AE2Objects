@@ -15,7 +15,48 @@ val releaseVersion = "$defaultVersion+$mcVersion"
 
 val neoForgeVersion = when (mcVersion) {
     "26.1.2" -> libs.versions.neoforge.get()
+    "26.2" -> libs.versions.neoforge262.get()
+    "26.3" -> libs.versions.neoforge263.get()
     else -> error("No NeoForge version configured for Minecraft $mcVersion")
+}
+
+val ae2Version = when (mcVersion) {
+    "26.1.2" -> libs.versions.ae2.get()
+    "26.2" -> libs.versions.ae2262.get()
+    "26.3" -> libs.versions.ae2263.get()
+    else -> error("No AE2 version configured for Minecraft $mcVersion")
+}
+
+// 26.2 replaced the creative-menu clone path with Slot.safeClone(Player), so the old
+// AbstractContainerMenu mixin only applies to 26.1.2.
+val mixinConfig = if (mcVersion == "26.1.2") {
+    "ae2objects.mixins.json"
+} else {
+    "ae2objects-safeclone.mixins.json"
+}
+
+// 26.2 replaced the square mod icon field `logoFile` with `iconFile`.
+val modIconKey = if (mcVersion == "26.1.2") "logoFile" else "iconFile"
+
+val neoForgeRange = when (mcVersion) {
+    "26.1.2" -> libs.versions.neoforgerange2612.get()
+    "26.2" -> libs.versions.neoforgerange262.get()
+    "26.3" -> libs.versions.neoforgerange263.get()
+    else -> error("No NeoForge dependency range configured for Minecraft $mcVersion")
+}
+
+val minecraftRange = when (mcVersion) {
+    "26.1.2" -> libs.versions.minecraftrange2612.get()
+    "26.2" -> libs.versions.minecraftrange262.get()
+    "26.3" -> libs.versions.minecraftrange263.get()
+    else -> error("No Minecraft dependency range configured for Minecraft $mcVersion")
+}
+
+val ae2Range = when (mcVersion) {
+    "26.1.2" -> libs.versions.ae2range2612.get()
+    "26.2" -> libs.versions.ae2range262.get()
+    "26.3" -> libs.versions.ae2range263.get()
+    else -> error("No AE2 dependency range configured for Minecraft $mcVersion")
 }
 
 fun getGitCommitHash(): String {
@@ -57,7 +98,7 @@ configurations {
 }
 
 dependencies {
-    implementation(libs.ae2)
+    implementation("org.appliedenergistics:appliedenergistics2:$ae2Version")
     compileOnly(libs.jspecify)
     testCompileOnly(libs.jspecify)
     testImplementation(libs.junit.jupiter)
@@ -81,11 +122,31 @@ java {
 
 tasks.withType<ProcessResources>().configureEach {
     val replaceProperties = mapOf(
-        "version" to project.version as String
+        "version" to project.version as String,
+        "neoforgeRange" to neoForgeRange,
+        "minecraftRange" to minecraftRange,
+        "ae2Range" to ae2Range,
+        "mixinConfig" to mixinConfig,
+        "modIconKey" to modIconKey
     )
     inputs.properties(replaceProperties)
     filesMatching("META-INF/neoforge.mods.toml") {
         expand(replaceProperties)
+    }
+
+    // Ship only the mixin config that matches this Minecraft version.
+    if (mcVersion == "26.1.2") {
+        exclude("ae2objects-safeclone.mixins.json")
+    } else {
+        exclude("ae2objects.mixins.json")
+    }
+
+    if (mcVersion == "26.3") {
+        // 26.3 renamed the recipe-unlocked advancement field. Keep the generated data canonical
+        // for 26.1/26.2 and rewrite it only in the 26.3 resources.
+        filesMatching("data/ae2objects/advancement/**/*.json") {
+            filter { line -> line.replace("\"recipe\":", "\"recipes\":") }
+        }
     }
 }
 
@@ -108,6 +169,16 @@ tasks.named<Jar>("jar") {
     }
 }
 
+tasks.named<Jar>("sourcesJar") {
+    // The runtime metadata is expanded for the concrete Minecraft version and is not source.
+    exclude("META-INF/neoforge.mods.toml")
+    if (mcVersion == "26.1.2") {
+        exclude("ae2objects-safeclone.mixins.json")
+    } else {
+        exclude("ae2objects.mixins.json")
+    }
+}
+
 tasks.register<Jar>("releaseJar") {
     group = "build"
     description = "Assembles a release jar archive without commit hash."
@@ -118,7 +189,16 @@ tasks.register<Jar>("releaseJar") {
     }
     from(rootProject.file("src/main/resources/META-INF/neoforge.mods.toml")) {
         into("META-INF")
-        expand(mapOf("version" to releaseVersion))
+        expand(
+            mapOf(
+                "version" to releaseVersion,
+                "neoforgeRange" to neoForgeRange,
+                "minecraftRange" to minecraftRange,
+                "ae2Range" to ae2Range,
+                "mixinConfig" to mixinConfig,
+                "modIconKey" to modIconKey
+            )
+        )
     }
     archiveBaseName.set("ae2objects")
     archiveVersion.set(releaseVersion)
@@ -175,10 +255,15 @@ neoForge {
             serverData()
             gameDirectory.set(rootProject.layout.projectDirectory.dir("run"))
             ideFolderName.set(mcVersion)
+            val dataOutput = if (mcVersion == "26.3") {
+                rootProject.layout.buildDirectory.dir("generated-data/26.3").get().asFile
+            } else {
+                rootProject.file("src/generated/resources")
+            }
             programArguments.addAll(
                 "--mod", "ae2objects",
                 "--all",
-                "--output", rootProject.file("src/generated/resources/").absolutePath,
+                "--output", dataOutput.absolutePath,
                 "--existing", rootProject.file("src/main/resources/").absolutePath
             )
         }

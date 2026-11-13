@@ -1,11 +1,26 @@
 [versions]
-mod = "0.2.0"
+mod = "0.2.1"
 
 minecraft = "26.1.2"
 neoforge = "26.1.2.98"
-moddev = "2.0.144"
+neoforge262 = "26.2.0.93"
+neoforge263 = "26.3.0.102"
+moddev = "2.0.148"
 
 ae2 = "26.1.10-beta"
+ae2262 = "26.2.1-alpha"
+ae2263 = "26.3.1-alpha"
+
+# Dependency version ranges are Minecraft-version specific and expanded into neoforge.mods.toml.
+neoforgerange2612 = "[26.1.2.71,)"
+neoforgerange262 = "[26.2.0.88,)"
+neoforgerange263 = "[26.3.0.43-beta,)"
+minecraftrange2612 = "[26.1.2, 26.2.0)"
+minecraftrange262 = "[26.2, 26.3)"
+minecraftrange263 = "[26.3, 26.4)"
+ae2range2612 = "[26.1.10-beta, 26.2.0)"
+ae2range262 = "[26.2.1-alpha, 26.3)"
+ae2range263 = "[26.3.1-alpha, 26.4)"
 
 jspecify = "1.0.0"
 foojay-resolver = "0.9.0"

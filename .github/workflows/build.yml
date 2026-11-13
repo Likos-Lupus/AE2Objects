@@ -30,8 +30,14 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew chiseledBuildAndCollect
 
-      - name: Run Game Tests
-        run: ./gradlew gameTestActive --console=plain
+      - name: Run Game Tests (26.1.2)
+        run: ./gradlew :26.1.2:runGameTestServer --console=plain
+
+      - name: Run Game Tests (26.2)
+        run: ./gradlew :26.2:runGameTestServer --console=plain
+
+      - name: Run Game Tests (26.3)
+        run: ./gradlew :26.3:runGameTestServer --console=plain
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7

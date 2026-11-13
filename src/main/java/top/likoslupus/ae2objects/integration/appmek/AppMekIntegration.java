@@ -5,9 +5,9 @@ import top.likoslupus.ae2objects.platform.IntegrationSet;
 /**
  * Skeleton for the optional Applied Mekanistics (chemical) integration.
  *
- * <p>Applied Mekanistics has no Minecraft 26.1 build yet, so its chemical {@code AEKeyType}
+ * <p>Applied Mekanistics has no Minecraft 26.x build yet, so its chemical {@code AEKeyType}
  * ({@code appmek:chemical} / {@code MekanismKeyType.TYPE}) cannot be referenced. This bootstrap
- * reserves the seam: once appmek ships a 26.1 build, register the chemical channel and portable
+ * reserves the seam: once appmek ships a 26.x build, register the chemical channel and portable
  * menu here, and {@code CellRegistrationPlan} will then activate the chemical cells
  * automatically.</p>
  *
@@ -23,7 +23,7 @@ public final class AppMekIntegration {
             return;
         }
 
-        // TODO: when an appmek 26.1 build exists, register the chemical channel and portable menu:
+        // TODO: when an appmek 26.x build exists, register the chemical channel and portable menu:
         //   StorageChannelRegistry.INSTANCE.register(new ChemicalChannelBinding(
         //           CellContentType.CHEMICAL, <chemical AEKeyType>, <radioactive-aware accepts>));
         //   PortableMenuRegistry.INSTANCE.register(new PortableMenuBinding(
