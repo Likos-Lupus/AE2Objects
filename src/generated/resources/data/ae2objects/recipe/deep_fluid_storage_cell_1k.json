@@ -2,11 +2,11 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "a": "ae2:quartz_glass",
+    "a": "ae2:quartz_vibrant_glass",
     "b": "#c:dusts/redstone",
     "c": "ae2:cell_component_1k",
     "d": "#c:ingots/netherite",
-    "e": "#c:gems/amethyst"
+    "e": "minecraft:copper_block"
   },
   "pattern": [
     "aba",

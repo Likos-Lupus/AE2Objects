@@ -35,10 +35,11 @@ public final class MegaRecipeProvider implements DataProvider {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String MEGA_MOD_ID = "megacells";
 
-    private static final String QUARTZ_GLASS = "ae2:quartz_glass";
+    private static final String QUARTZ_VIBRANT_GLASS = "ae2:quartz_vibrant_glass";
     private static final String REDSTONE = "#c:dusts/redstone";
     private static final String NETHERITE = "#c:ingots/netherite";
-    private static final String AMETHYST = "#c:gems/amethyst";
+    private static final String AMETHYST_BLOCK = "minecraft:amethyst_block";
+    private static final String COPPER_BLOCK = "minecraft:copper_block";
     private static final String ME_CHEST = "ae2:me_chest";
     private static final String ENERGY_CELL = "ae2:energy_cell";
 
@@ -110,11 +111,16 @@ public final class MegaRecipeProvider implements DataProvider {
         recipe.add("pattern", pattern);
 
         var key = new JsonObject();
-        key.addProperty("a", QUARTZ_GLASS);
+        key.addProperty("a", QUARTZ_VIBRANT_GLASS);
         key.addProperty("b", REDSTONE);
         key.addProperty("c", component);
         key.addProperty("d", NETHERITE);
-        key.addProperty("e", AMETHYST);
+        key.addProperty(
+                "e",
+                definition.type() == CellContentType.FLUID
+                        ? COPPER_BLOCK
+                        : AMETHYST_BLOCK
+        );
         recipe.add("key", key);
 
         return recipe;

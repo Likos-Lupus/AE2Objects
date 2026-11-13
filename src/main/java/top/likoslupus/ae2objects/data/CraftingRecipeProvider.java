@@ -7,14 +7,11 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-//? if 26.3 {
-/*import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.advancements.Advancement;
-import net.minecraft.data.worldgen.BootstrapContext;
-*///?}
 import net.neoforged.neoforge.common.Tags;
+import top.likoslupus.ae2objects.cell.model.CellContentType;
 import top.likoslupus.ae2objects.cell.model.CellDefinition;
 import top.likoslupus.ae2objects.cell.model.CellTier;
 import top.likoslupus.ae2objects.registry.CellComponentSources;
@@ -22,6 +19,12 @@ import top.likoslupus.ae2objects.registry.RegisteredCells;
 import top.likoslupus.ae2objects.registry.RegisteredHousings;
 
 import java.util.concurrent.CompletableFuture;
+
+//? if 26.3 {
+/*import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.data.worldgen.BootstrapContext;
+*///?}
 
 public final class CraftingRecipeProvider extends RecipeProvider {
 
@@ -66,11 +69,11 @@ public final class CraftingRecipeProvider extends RecipeProvider {
                     .pattern("aba")
                     .pattern("bcb")
                     .pattern("ded")
-                    .define('a', AEBlocks.QUARTZ_GLASS)
+                    .define('a', AEBlocks.QUARTZ_VIBRANT_GLASS)
                     .define('b', Tags.Items.DUSTS_REDSTONE)
                     .define('c', component)
                     .define('d', Tags.Items.INGOTS_NETHERITE)
-                    .define('e', Tags.Items.GEMS_AMETHYST)
+                    .define('e', bottomCenter(definition.type()))
                     .unlockedBy("has_netherite", has(Tags.Items.INGOTS_NETHERITE))
                     .save(output);
             shapeless(RecipeCategory.MISC, cell)
@@ -110,24 +113,37 @@ public final class CraftingRecipeProvider extends RecipeProvider {
     }
 
     private void housingRecipes() {
-        RegisteredHousings.all().forEach(housing ->
-                shaped(RecipeCategory.MISC, housing)
-                        .pattern("aba")
-                        .pattern("b b")
-                        .pattern("ded")
-                        .define('a', AEBlocks.QUARTZ_GLASS)
-                        .define('b', Tags.Items.DUSTS_REDSTONE)
-                        .define('d', Tags.Items.INGOTS_NETHERITE)
-                        .define('e', Tags.Items.GEMS_AMETHYST)
-                        .unlockedBy("has_netherite", has(Tags.Items.INGOTS_NETHERITE))
-                        .save(output)
-        );
+        housingRecipe(CellContentType.ITEM);
+        housingRecipe(CellContentType.FLUID);
     }
 
     private static Item componentOf(CellDefinition definition) {
         return BuiltInRegistries.ITEM
                 .getOptional(CellComponentSources.forTier(definition.tier()).itemId())
                 .orElse(Items.AIR);
+    }
+
+    private static Item bottomCenter(CellContentType type) {
+        // 26.3 exposes copper blocks as a WeatheringCopperCollection instead of an Item field.
+        return type == CellContentType.FLUID
+                ? BuiltInRegistries.ITEM.getValue(
+                        Identifier.fromNamespaceAndPath("minecraft", "copper_block")
+                )
+                : Items.AMETHYST_BLOCK;
+    }
+
+    private void housingRecipe(CellContentType type) {
+        var housing = RegisteredHousings.require(type).get();
+        shaped(RecipeCategory.MISC, housing)
+                .pattern("aba")
+                .pattern("b b")
+                .pattern("ded")
+                .define('a', AEBlocks.QUARTZ_VIBRANT_GLASS)
+                .define('b', Tags.Items.DUSTS_REDSTONE)
+                .define('d', Tags.Items.INGOTS_NETHERITE)
+                .define('e', bottomCenter(type))
+                .unlockedBy("has_netherite", has(Tags.Items.INGOTS_NETHERITE))
+                .save(output);
     }
 
     //? if <26.3 {
