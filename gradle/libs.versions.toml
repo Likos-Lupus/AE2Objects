@@ -23,7 +23,7 @@ ae2range262 = "[26.2.1-alpha, 26.3)"
 ae2range263 = "[26.3.1-alpha, 26.4)"
 
 jspecify = "1.0.0"
-foojay-resolver = "0.9.0"
+foojay-resolver = "1.0.0"
 junit = "6.1.3"
 
 [libraries]
